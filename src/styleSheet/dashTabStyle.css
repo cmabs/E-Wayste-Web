@@ -1,0 +1,154 @@
+.orangeBox {
+    display: flex;
+    flex-direction: column;
+    height: 160px;
+    width: 190px;
+    background-color: rgb(255,248,172);
+    border-radius: 25px;
+    align-items: center;
+}
+.orangeBox2 {
+    display: flex;
+    flex-direction: column;
+    height: 160px;
+    width: 240px;
+    background-color: rgb(255, 219, 172);
+    border-radius: 25px;
+    align-items: center;
+}
+.mapDashboard {
+    height: 400px;
+    width: 900px;
+    background-image: url('../images/SampleMap.png');
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-size: 100% 130%;
+    background-position: center;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 0.5px;
+    border-color: rgb(180,180,180);
+}
+.userList {
+    height: 400px;
+    width: 900px;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 0.5px;
+    border-color: rgb(0, 123, 0);
+    margin-bottom: 30px;
+    overflow-y: auto;
+}
+.userList::-webkit-scrollbar {
+    width: 5px;
+}
+.userList:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(91, 209, 91);
+    border-top-right-radius: 100px;
+    border-bottom-right-radius: 100px;
+}
+.userList::-webkit-scrollbar-thumb:active {
+    background-color: rgb(74, 187, 74);
+}
+
+
+
+.userListB {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overflow: hidden;
+}
+.userListB button {
+    font-family: Inter;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 30px;
+    border: none;
+    padding: 0;
+    background-color: transparent;
+    z-index: 10;
+    align-items: center;
+}
+.userList button:hover {
+    background-color: rgb(222, 241, 191);
+    transition: 0.2s;
+}
+
+
+
+.notifIcon {
+    border-style: none;
+    background: transparent;
+    padding: 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 45px;
+    height: 45px;
+    color: rgb(0,123,0);
+}
+.notifIcon:hover {
+    color: rgb(0, 100, 0);
+}
+.notifIcon:active {
+    color: rgb(80, 156, 69);
+}
+
+
+
+.searchBar {
+    height: 40px;
+    width: 180px;
+    padding: 0px;
+    padding-left: 12px;
+    border-top-left-radius: 30px;
+    border-bottom-left-radius: 30px;
+    border-style: solid;
+    border-width: 1px;
+    border-right-width: 0px;
+    border-color: rgb(0,123,0);
+    background-color: rgb(244,253,240);
+    outline-style: none;
+    color: rgb(13,86,1);
+    transition: 0.5s;
+}
+.searchBar:hover {
+    width: 250px;
+    transition: 0.5s;
+}
+.searchBar:focus {
+    width: 250px;
+    transition: 0.5s;
+}
+.searchBar:not(:placeholder-shown) {
+    width: 250px;
+    transition: 0.5s;
+}
+.searchButton {
+    height: 42px;
+    width: 40px;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-style: solid;
+    border-width: 1px;
+    border-left-width: 0px;
+    border-color: rgb(0, 123, 0);
+    background-color: rgb(244, 253, 240);
+    outline-style: none;
+    color: rgb(0, 123, 0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.searchButton:hover {
+    background-color: rgb(211, 231, 204);
+    color: rgb(13, 86, 1);
+    transition: 0.2s;
+}
+.searchButton:active {
+    background-color: rgb(0, 123, 0);
+    color: rgb(255, 255, 255);
+    transition: 0.1s;
+}

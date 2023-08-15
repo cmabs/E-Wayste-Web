@@ -1,0 +1,97 @@
+.homePage {
+    display: flex;
+    position: relative;
+    width: 100%;
+    background-color: #ffffff;
+}
+.containLogo3 {
+    display: flex;
+    width: 80px;
+    height: 80px;
+    border-radius: 100%;
+    background-color: rgb(255, 255, 255);
+    justify-content: center;
+    align-items: center;
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.200);
+    border-style: solid;
+    border-width: 0.5px;
+    border-color: rgba(0, 0, 0, 0.200);
+}
+.imgLogo3 {
+    width: 105%;
+    transform: translateX(-6.6%);
+    margin-top: -2.45px;
+}
+.titleLogo3 {
+    font-family: 'Franklin Gothic Heavy';
+    font-size: 25px;
+    color: rgb(0, 123, 0);
+    text-transform: uppercase;
+    margin-top: 10px;
+}
+.sideNav {
+    display: flex;
+    position: fixed;
+    height: 661px;
+    width: 300px;
+    top: -1px;
+    background-color: rgb(244, 253, 240);
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    border-style: solid;
+    border-width: 0.5px;
+    border-color: rgb(224, 238, 218);
+    box-shadow: 10px 0px 50px rgba(0, 0, 0, 0.03);
+}
+.sideNav button {
+    color: rgb(13, 86, 1);
+    font-family: Inter;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: left;
+    padding-left: 20px;
+}
+.sideNav button.inactiveB:hover {
+    font-size: 1em;
+    transition: 0.2s;
+    color: rgb(0, 123, 0);
+}
+.sideNav button.activeB {
+    color: rgb(0, 123, 0);
+}
+
+
+
+.divNavB {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.inactiveB, .activeB {
+    background-color: transparent;
+    height: 40px;
+    width: 260px;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+i {
+    position: absolute;
+    height: 40px;
+    width: 0px;
+    background-color: rgba(189, 227, 124, 0.45);
+    z-index: -1;
+    border-radius: 10px;
+}
+.inactiveB:hover ~ i {
+    background-color: rgba(189, 227, 124,0.45);
+    width: 260px;
+    transition: 0.2s;
+}
+.activeB ~ i {
+    background-color: rgb(189, 227, 124);
+    width: 260px;
+    transition: 0.2s;
+}
