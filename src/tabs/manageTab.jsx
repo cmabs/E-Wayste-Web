@@ -1,8 +1,10 @@
 import { React, useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import '../styleSheet/dashTabStyle.css'
+import '../styleSheet/manageTabStyle.css'
 
 import { FaSearch, FaBell } from 'react-icons/fa';
+import { MdOutlineModeEdit } from 'react-icons/md';
+import { ImCheckmark } from 'react-icons/im';
 
 export default function UserManage() {
 
@@ -10,22 +12,28 @@ export default function UserManage() {
         let temp = [];
         for (let i = 0; i < 50; i++) {
             temp.push(
-                <div className='userListB'>
+                <div className='userManageB'>
                     <button>
-                        <div style={{width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderLeftWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden'}}>
-                            <p>User's Name</p>
+                        <div style={{ flex: 1, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
+                            <input type="checkbox" className="checkInput" style={{ width: 18, height: 18 }} />
+                            <ImCheckmark className="checkmark" />
                         </div>
-                        <div style={{width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden'}}>
-                            <p style={{color: 'rgb(0,123,0)'}}>ACTIVE</p>
+                        <div style={{ flex: 3, overflow: 'hidden' }}>
+                            <p>Username</p>
                         </div>
-                        <div style={{width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden'}}>
-                            <p>SampleEmail@gmail.com</p>
+                        <div style={{ flex: 2, overflow: 'hidden' }}>
+                            <p>General Users</p>
                         </div>
-                        <div style={{width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden'}}>
-                            <p>General User</p>
+                        <div style={{ flex: 2, overflow: 'hidden' }}>
+                            <p>ACTIVE</p>
                         </div>
-                        <div style={{width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(200,200,200)', overflow: 'hidden'}}>
-                            <p>04/11/2023</p>
+                        <div style={{ flex: 5, overflow: 'hidden' }}>
+                            <p>Jugan, Consolacion, Cebu</p>
+                        </div>
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <button className="editB">
+                                <MdOutlineModeEdit />
+                            </button>
                         </div>
                     </button>
                 </div>
@@ -39,7 +47,7 @@ export default function UserManage() {
         </ul>
 
         return (
-            <div style={{display: 'flex', flexDirection: 'column'}}>
+            <div>
                 {temp}
             </div>
         );
@@ -60,7 +68,28 @@ export default function UserManage() {
                         </button>
                     </div>
                 </div>
-                <div style={{marginTop: 50, marginBottom: 40}}>
+                <div style={{ marginTop: 50, marginBottom: 40, backgroundColor: 'rgb(243,243,243)', padding: 10, borderRadius: 20 }}>
+                    <div style={{ display: 'flex', width: '100%', borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(210,210,210)', marginBottom: 10, fontFamily: 'Inter', fontWeight: 500, fontSize: 14 }}>
+                        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
+                            <input type="checkbox" className="checkInput" style={{ width: 18, height: 18 }} />
+                            <ImCheckmark className="checkmark2" />
+                        </div>
+                        <div style={{ display: 'flex', flex: 3, overflow: 'hidden', justifyContent: 'center' }}>
+                            <p>Username</p>
+                        </div> 
+                        <div style={{ display: 'flex', flex: 2, overflow: 'hidden', justifyContent: 'center' }}>
+                            <p>Type</p>
+                        </div> 
+                        <div style={{ display: 'flex', flex: 2, overflow: 'hidden', justifyContent: 'center' }}>
+                            <p>Status</p>
+                        </div> 
+                        <div style={{ display: 'flex', flex: 5, overflow: 'hidden', justifyContent: 'center' }}>
+                            <p>Location</p>
+                        </div>
+                        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', justifyContent: 'center' }}>
+                            <p>Edit</p>
+                        </div> 
+                    </div>
                     {UserListContent()}
                 </div>
             </div>

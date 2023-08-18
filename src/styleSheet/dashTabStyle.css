@@ -57,7 +57,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    overflow: hidden;
 }
 .userListB button {
     font-family: Inter;
@@ -71,7 +70,7 @@
     z-index: 10;
     align-items: center;
 }
-.userList button:hover {
+.userListB button:hover {
     background-color: rgb(222, 241, 191);
     transition: 0.2s;
 }
