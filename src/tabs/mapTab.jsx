@@ -59,7 +59,7 @@ export default function Map() {
             <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
                 <div style={{display: 'flex', flexDirection: 'row', marginBottom: 0}}>
                     <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650}}>Map</h1>
-                    <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
+                    <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 10 }}>
                         <button className="notifIcon">
                             <FaBell />
                         </button>

@@ -7,12 +7,16 @@ import UserManage from "../tabs/manageTab";
 import Report from "../tabs/reportTab";
 import Map from "../tabs/mapTab";
 import Schedule from "../tabs/schedTab";
+import Newsfeed from "../tabs/newsfeedTab";
 
 import { RxDashboard } from 'react-icons/rx';
 import { MdPersonOutline } from 'react-icons/md';
 import { TbReportAnalytics } from 'react-icons/tb';
 import { FaRegMap } from 'react-icons/fa';
 import { BiCalendar } from 'react-icons/bi';
+import { BiNews} from 'react-icons/bi';
+import { IoPersonOutline } from 'react-icons/io5';
+import { IoLogOutOutline } from 'react-icons/io5';
 
 export default function Home() {
     const [sideNavlink, setSideNavlink] = useState('option1');
@@ -21,6 +25,7 @@ export default function Home() {
     const [nav3Style, setNav3Style] = useState();
     const [nav4Style, setNav4Style] = useState();
     const [nav5Style, setNav5Style] = useState();
+    const [nav6Style, setNav6Style] = useState();
     const [openTab, setOpenTab] = useState();
 
     useEffect(() => {
@@ -30,6 +35,7 @@ export default function Home() {
             setNav3Style('inactiveB');
             setNav4Style('inactiveB');
             setNav5Style('inactiveB');
+            setNav6Style('inactiveB')
             setOpenTab(Dashboard);
         }
         if (sideNavlink === 'option2') {
@@ -38,7 +44,8 @@ export default function Home() {
             setNav3Style('inactiveB');
             setNav4Style('inactiveB');
             setNav5Style('inactiveB');
-            setOpenTab(UserManage);
+            setNav6Style('inactiveB')
+            setOpenTab(Newsfeed);
         }
         if (sideNavlink === 'option3') {
             setNav1Style('inactiveB');
@@ -46,6 +53,7 @@ export default function Home() {
             setNav3Style('activeB');
             setNav4Style('inactiveB');
             setNav5Style('inactiveB');
+            setNav6Style('inactiveB')
             setOpenTab(Report);
         }
         if (sideNavlink === 'option4') {
@@ -54,6 +62,7 @@ export default function Home() {
             setNav3Style('inactiveB');
             setNav4Style('activeB');
             setNav5Style('inactiveB');
+            setNav6Style('inactiveB')
             setOpenTab(Map);
         }
         if (sideNavlink === 'option5') {
@@ -62,7 +71,17 @@ export default function Home() {
             setNav3Style('inactiveB');
             setNav4Style('inactiveB');
             setNav5Style('activeB');
+            setNav6Style('inactiveB')
             setOpenTab(Schedule);
+        }
+        if (sideNavlink === 'option6') {
+            setNav1Style('inactiveB');
+            setNav2Style('inactiveB');
+            setNav3Style('inactiveB');
+            setNav4Style('inactiveB');
+            setNav5Style('inactiveB');
+            setNav6Style('activeB')
+            setOpenTab(UserManage);
         }
     });
 
@@ -70,7 +89,7 @@ export default function Home() {
         <>
             <div className="homePage">
                 <div className="sideNav">
-                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20}}>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 }}>
                         <div className="containLogo3">
                             <img src={Logo} alt="logo" className="imgLogo3" />
                         </div>
@@ -78,28 +97,41 @@ export default function Home() {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', marginTop: 25, gap: 6 }}>
                         <div className="divNavB">
-                            <button className={nav1Style} onClick={() => { setSideNavlink('option1') }}><RxDashboard style={{fontSize: '1.5em'}} />Dashboard</button>
-                            <i/>
+                            <button className={nav1Style} onClick={() => { setSideNavlink('option1') }}><RxDashboard style={{ fontSize: '1.5em' }} />Dashboard</button>
+                            <i />
                         </div>
                         <div className="divNavB">
-                            <button className={nav2Style} onClick={() => {setSideNavlink('option2')}}><MdPersonOutline style={{fontSize: '1.5em'}} />User Management</button>
-                            <i/>
+                            <button className={nav2Style} onClick={() => { setSideNavlink('option2') }}><BiNews style={{ fontSize: '1.5em' }} />Newsfeed</button>
+                            <i />
                         </div>
                         <div className="divNavB">
-                            <button className={nav3Style} onClick={() => {setSideNavlink('option3')}}><TbReportAnalytics style={{fontSize: '1.5em'}} />Garbage Reports</button>
-                            <i/>
+                            <button className={nav3Style} onClick={() => { setSideNavlink('option3') }}><TbReportAnalytics style={{ fontSize: '1.5em' }} />Garbage Reports</button>
+                            <i />
                         </div>
                         <div className="divNavB">
-                            <button className={nav4Style} onClick={() => {setSideNavlink('option4')}}><FaRegMap style={{fontSize: '1.5em'}} />Map</button>
-                            <i/>
+                            <button className={nav4Style} onClick={() => { setSideNavlink('option4') }}><FaRegMap style={{ fontSize: '1.5em' }} />Map</button>
+                            <i />
                         </div>
                         <div className="divNavB">
-                            <button className={nav5Style} onClick={() => { setSideNavlink('option5') }}><BiCalendar style={{fontSize: '1.5em'}} />Schedule</button>
-                            <i/>
+                            <button className={nav5Style} onClick={() => { setSideNavlink('option5') }}><BiCalendar style={{ fontSize: '1.5em' }} />Schedule</button>
+                            <i />
+                        </div>
+                        <div className="divNavB">
+                            <button className={nav6Style} onClick={() => { setSideNavlink('option6') }}><MdPersonOutline style={{ fontSize: '1.5em' }} />User Management</button>
+                            <i />
                         </div>
                     </div>
+                    <div className="user-profile" style={{ marginTop: 200, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <IoPersonOutline style={{ fontSize: '2em', marginBottom: 5 }} />
+                        <span className="user-name">ADMIN</span> 
+                    </div>
+                    <div className="logout-container" style={{ marginTop: 15 }}>
+                        <button className="logoutBtn">
+                            <IoLogOutOutline style={{ fontSize: '1.5em' }} />
+                        </button>
+                    </div>
                 </div>
-                <div style={{marginLeft: 300}}>
+                <div style={{ marginLeft: 300 }}>
                     {openTab}
                 </div>
             </div>
