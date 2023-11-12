@@ -32,7 +32,7 @@
 .sideNav {
     display: flex;
     position: fixed;
-    height: 661px;
+    height: 800px;
     width: 300px;
     top: -1px;
     background-color: rgb(244, 253, 240);
@@ -94,4 +94,51 @@ i {
     background-color: rgb(189, 227, 124);
     width: 260px;
     transition: 0.2s;
+}
+
+.profileSection {
+    position: center;
+    margin-top: 180px;
+    cursor: pointer;
+}
+
+.adminName {
+    color: rgb(13, 86, 1);
+    font-family: inter;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top:10px;
+  }
+
+.profilePicture {
+    border: 2px solid rgb(5, 146, 54);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+    border-radius: 50px;
+    width: 50px; 
+    height: 50px; 
+}
+  
+.logoImage {
+    width: 100%; /* Ensure the image fills the container */
+    height: 100%; /* Ensure the image fills the container */
+    object-fit: cover; /* Maintain aspect ratio and cover the container */
+}
+
+.logoutButton {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+  
+.logoutButton svg {
+    stroke: white;
+    margin-right: 10px;
+    width: 20px; 
+    height: 20px;
 }
