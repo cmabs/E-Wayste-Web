@@ -17,6 +17,7 @@ import { FaRegMap } from 'react-icons/fa';
 import { BiCalendar, BiNews } from 'react-icons/bi'; 
 import { IoPersonOutline, IoLogOutOutline } from 'react-icons/io5'; 
 import userlogo from '../images/userlogo.png'; 
+
 export default function Home() { 
   const [adminName, setAdminName] = useState(""); 
   const [sideNavlink, setSideNavlink] = useState('option1'); 
@@ -28,6 +29,7 @@ export default function Home() {
   const [nav6Style, setNav6Style] = useState(); 
   const [openTab, setOpenTab] = useState(); 
   const navigate = useNavigate(); 
+
   useEffect(() => { 
     const fetchAdminName = async () => { 
       try { 
@@ -41,6 +43,7 @@ export default function Home() {
     }; 
     fetchAdminName(); 
   }, []); 
+  
   useEffect(() => { 
     if (sideNavlink === 'option1') { 
       setNav1Style('activeB'); 
