@@ -12,8 +12,9 @@ export default function Register() {
   const [password, setPassword] = useState(""); 
   const [confirmPassword, setConfirmPassword] = useState(""); 
   const [missingFields, setMissingFields] = useState([]); 
+  
   const handleCreateAccount = async () => { 
-    // Validation checks 
+
     const missing = []; 
     if (firstName.trim() === "") { 
       missing.push("firstName"); 

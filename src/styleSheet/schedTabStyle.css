@@ -1,0 +1,16 @@
+.tab-header-sched {
+    font-size: 30px;
+    color: #0D5601;
+    margin: 20px;
+    margin-top: 30px;
+    font-weight: bolder;
+    font-family: Inter;
+}
+.sched-container {
+    display: flex;
+    border-radius: 20;
+    background-color: antiquewhite;
+    width: 100%;
+    height: 500px;
+    margin-inline-start: auto;
+}

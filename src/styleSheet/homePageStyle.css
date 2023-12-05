@@ -97,7 +97,9 @@ i {
 }
 
 .profileSection {
-    position: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-top: 180px;
     cursor: pointer;
 }
@@ -108,6 +110,7 @@ i {
     font-weight: bold;
     font-size: 16px;
     margin-top:10px;
+    
   }
 
 .profilePicture {

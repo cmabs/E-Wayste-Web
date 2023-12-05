@@ -17,16 +17,22 @@ export default function Login() {
         where("username", "==", username),
         where("password", "==", password)
       );
-
       const querySnapshot = await getDocs(userQuery);
-      const users = querySnapshot.docs.map((doc) => doc.data());
-
+      const users = querySnapshot.docs.map((doc) => {
+        const userData = doc.data();
+        return {
+          id: doc.id,
+          ...userData
+        };
+      });
       if (users.length === 0) {
         alert("User not found. Please check your credentials.");
         return;
       }
-
-      alert("Logged in successfully!");
+      const loggedInUser = users[0];
+      console.log("Logged in successfully! User ID:", loggedInUser.id);
+      // Log the user ID to the console
+      console.log("User ID:", loggedInUser.id);
       navigate("/Home");
     } catch (error) {
       console.error("Error logging in: ", error);
@@ -67,7 +73,7 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-              <p>Username / Email Address</p>
+              <p>Username</p>
               <i></i>
             </div>
             <div className="inputBox"> 

@@ -10,6 +10,7 @@ import Report from "../tabs/reportTab";
 import Map from "../tabs/mapTab"; 
 import Schedule from "../tabs/schedTab"; 
 import Newsfeed from "../tabs/newsfeedTab"; 
+import Profile from "../tabs/userProfile";
 import { RxDashboard } from 'react-icons/rx'; 
 import { MdPersonOutline } from 'react-icons/md'; 
 import { TbReportAnalytics } from 'react-icons/tb'; 
@@ -28,7 +29,7 @@ export default function Home() {
   const [nav5Style, setNav5Style] = useState(); 
   const [nav6Style, setNav6Style] = useState(); 
   const [openTab, setOpenTab] = useState(); 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();   
 
   useEffect(() => { 
     const fetchAdminName = async () => { 
@@ -99,13 +100,19 @@ export default function Home() {
       setNav6Style('activeB') 
       setOpenTab(UserManage); 
     } 
+    if (sideNavlink === 'option7') { 
+      setNav1Style('inactiveB'); 
+      setNav2Style('inactiveB'); 
+      setNav3Style('inactiveB'); 
+      setNav4Style('inactiveB'); 
+      setNav5Style('inactiveB'); 
+      setNav6Style('inactiveB') 
+      setOpenTab(Profile); 
+    } 
+
   }, [sideNavlink]); 
   const handleLogout = () => { 
     navigate("/"); 
-  }; 
-
-  const handleProfileClick = () => { 
-    navigate("/userProfile");    
   }; 
 
   return ( 
@@ -146,9 +153,9 @@ export default function Home() {
           </div> 
           <div className="profileSection">
             <div className="profilePicture small">
-              <img src={userlogo} alt="user-logo" className="logoImage" onClick={handleProfileClick} />
+              <img src={userlogo} alt="user-logo" className="logoImage"onClick={() => { setSideNavlink('option7') }} />
             </div>
-            <p className="adminName">{adminName}John Doe</p>
+            <p className="adminName">{adminName}AdminName</p>
             <button className="logoutButton" onClick={handleLogout}> 
               <IoLogOutOutline /> 
             </button> 
