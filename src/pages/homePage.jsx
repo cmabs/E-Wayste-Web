@@ -1,170 +1,114 @@
-import { React, useState, useEffect } from "react"; 
-import { NavLink, useNavigate } from "react-router-dom"; 
-import { getFirestore, doc, getDoc} from "firebase/firestore"; 
-import { db } from "../firebase-config"; 
-import '../styleSheet/homePageStyle.css'; 
-import Logo from '../images/E-Wayste-logo.png'; 
-import Dashboard from "../tabs/dashTab"; 
-import UserManage from "../tabs/manageTab"; 
-import Report from "../tabs/reportTab"; 
-import Map from "../tabs/mapTab"; 
-import Schedule from "../tabs/schedTab"; 
-import Newsfeed from "../tabs/newsfeedTab"; 
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate, } from "react-router-dom"; 
+import '../styleSheet/homePageStyle.css';
+import Logo from '../images/E-Wayste-logo.png';
+import Dashboard from "../tabs/dashTab";
+import UserManage from "../tabs/manageTab";
+import Report from "../tabs/reportTab";
+import Map from "../tabs/mapTab";
+import Schedule from "../tabs/schedTab";
+import Newsfeed from "../tabs/newsfeedTab";
 import Profile from "../tabs/userProfile";
-import { RxDashboard } from 'react-icons/rx'; 
-import { MdPersonOutline } from 'react-icons/md'; 
-import { TbReportAnalytics } from 'react-icons/tb'; 
-import { FaRegMap } from 'react-icons/fa'; 
-import { BiCalendar, BiNews } from 'react-icons/bi'; 
-import { IoPersonOutline, IoLogOutOutline } from 'react-icons/io5'; 
+import { RxDashboard } from 'react-icons/rx';
+import { MdPersonOutline, MdAccountCircle } from 'react-icons/md';
+import { TbReportAnalytics } from 'react-icons/tb';
+import { FaRegMap } from 'react-icons/fa';
+import { BiCalendar } from 'react-icons/bi';
+import { IoLogOutOutline } from 'react-icons/io5';
+import { MdLibraryBooks } from 'react-icons/md';
 import userlogo from '../images/userlogo.png'; 
+import { auth, db } from '../firebase-config';
 
-export default function Home() { 
-  const [adminName, setAdminName] = useState(""); 
-  const [sideNavlink, setSideNavlink] = useState('option1'); 
-  const [nav1Style, setNav1Style] = useState(); 
-  const [nav2Style, setNav2Style] = useState(); 
-  const [nav3Style, setNav3Style] = useState(); 
-  const [nav4Style, setNav4Style] = useState(); 
-  const [nav5Style, setNav5Style] = useState(); 
-  const [nav6Style, setNav6Style] = useState(); 
-  const [openTab, setOpenTab] = useState(); 
-  const navigate = useNavigate();   
-
-  useEffect(() => { 
-    const fetchAdminName = async () => { 
-      try { 
-        const userSnapshot = await getDoc(doc(db, "usersAdmin", "adminId")); // Replace "adminId" with the actual ID of the logged-in user 
-        const userData = userSnapshot.data(); 
-        const { firstName, lastName } = userData; 
-        setAdminName(`${firstName} ${lastName}`); 
-      } catch (error) { 
-        console.error("Error fetching admin name: ", error); 
-      } 
-    }; 
-    fetchAdminName(); 
-  }, []); 
+export default function Home() {
+  const [sideNavlink, setSideNavlink] = useState('option1');
+  const [openTab, setOpenTab] = useState(<Dashboard />);
+  const [adminName, setAdminName] = useState("Admin Name");
   
-  useEffect(() => { 
-    if (sideNavlink === 'option1') { 
-      setNav1Style('activeB'); 
-      setNav2Style('inactiveB'); 
-      setNav3Style('inactiveB'); 
-      setNav4Style('inactiveB'); 
-      setNav5Style('inactiveB'); 
-      setNav6Style('inactiveB') 
-      setOpenTab(Dashboard); 
-    } 
-    if (sideNavlink === 'option2') { 
-      setNav1Style('inactiveB'); 
-      setNav2Style('activeB'); 
-      setNav3Style('inactiveB'); 
-      setNav4Style('inactiveB'); 
-      setNav5Style('inactiveB'); 
-      setNav6Style('inactiveB') 
-      setOpenTab(Newsfeed); 
-    } 
-    if (sideNavlink === 'option3') { 
-      setNav1Style('inactiveB'); 
-      setNav2Style('inactiveB'); 
-      setNav3Style('activeB'); 
-      setNav4Style('inactiveB'); 
-      setNav5Style('inactiveB'); 
-      setNav6Style('inactiveB') 
-      setOpenTab(Report); 
-    } 
-    if (sideNavlink === 'option4') { 
-      setNav1Style('inactiveB'); 
-      setNav2Style('inactiveB'); 
-      setNav3Style('inactiveB'); 
-      setNav4Style('activeB'); 
-      setNav5Style('inactiveB'); 
-      setNav6Style('inactiveB') 
-      setOpenTab(Map); 
-    } 
-    if (sideNavlink === 'option5') { 
-      setNav1Style('inactiveB'); 
-      setNav2Style('inactiveB'); 
-      setNav3Style('inactiveB'); 
-      setNav4Style('inactiveB'); 
-      setNav5Style('activeB'); 
-      setNav6Style('inactiveB') 
-      setOpenTab(Schedule); 
-    } 
-    if (sideNavlink === 'option6') { 
-      setNav1Style('inactiveB'); 
-      setNav2Style('inactiveB'); 
-      setNav3Style('inactiveB'); 
-      setNav4Style('inactiveB'); 
-      setNav5Style('inactiveB'); 
-      setNav6Style('activeB') 
-      setOpenTab(UserManage); 
-    } 
-    if (sideNavlink === 'option7') { 
-      setNav1Style('inactiveB'); 
-      setNav2Style('inactiveB'); 
-      setNav3Style('inactiveB'); 
-      setNav4Style('inactiveB'); 
-      setNav5Style('inactiveB'); 
-      setNav6Style('inactiveB') 
-      setOpenTab(Profile); 
-    } 
+  const navigate = useNavigate();
 
-  }, [sideNavlink]); 
+  const handleNavClick = (option) => {
+      setSideNavlink(option);
+      switch (option) {
+          case 'option1':
+              setOpenTab(<Dashboard />);
+              break;
+          case 'option2':
+              setOpenTab(<UserManage />);
+              break;
+          case 'option3':
+              setOpenTab(<Report />);
+              break;
+          case 'option4':
+              setOpenTab(<Map />);
+              break;
+          case 'option5':
+              setOpenTab(<Schedule />);
+              break;
+          case 'option6':
+              setOpenTab(<Newsfeed />);
+              break;
+          case 'option7':
+              setOpenTab(<Profile />);
+              break;
+          default:
+              setOpenTab(null);
+      }
+  };
+
   const handleLogout = () => { 
     navigate("/"); 
-  }; 
+  };
+  
+  return (
+    <>
+      <div className="homePage">
+        <div className="sideNav">
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 }}>
+            <div className="containLogo3">
+              <img src={Logo} alt="logo" className="imgLogo3" />
+            </div>
+            <h1 className="titleLogo3">E-Wayste</h1>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 15, gap: 6 }}> {/* Adjusted marginTop */}
+            <div className="divNavB">
+              <button className={sideNavlink === 'option1' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option1')}><RxDashboard style={{ fontSize: '1.5em' }} />Dashboard</button>
+            </div>
+            <div className="divNavB">
+              <button className={sideNavlink === 'option2' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option2')}><MdPersonOutline style={{ fontSize: '1.5em' }} />User Management</button>
+            </div>
+            <div className="divNavB">
+              <button className={sideNavlink === 'option3' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option3')}><TbReportAnalytics style={{ fontSize: '1.5em' }} />Garbage Reports</button>
+            </div>
+            <div className="divNavB">
+              <button className={sideNavlink === 'option4' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option4')}><FaRegMap style={{ fontSize: '1.5em' }} />Map</button>
+            </div>
+            <div className="divNavB">
+              <button className={sideNavlink === 'option5' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option5')}><BiCalendar style={{ fontSize: '1.5em' }} />Schedule</button>
+            </div>
+            <div className="divNavB">
+              <button className={sideNavlink === 'option6' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option6')}><MdLibraryBooks style={{ fontSize: '1.5em' }} />Newsfeed</button>
+            </div>
+            <div className="divNavB">
+              <button className={sideNavlink === 'option7' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option7')}><MdAccountCircle style={{ fontSize: '1.5em' }} />User Profile</button>
+            </div>
+          </div>
 
-  return ( 
-    <> 
-      <div className="homePage"> 
-        <div className="sideNav"> 
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 }}> 
-            <div className="containLogo3"> 
-              <img src={Logo} alt="logo" className="imgLogo3" /> 
-            </div> 
-            <h1 className="titleLogo3">E-Wayste</h1> 
-          </div> 
-          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 25, gap: 6 }}> 
-            <div className="divNavB"> 
-              <button className={nav1Style} onClick={() => { setSideNavlink('option1') }}><RxDashboard style={{ fontSize: '1.5em' }} />Dashboard</button> 
-              <i /> 
-            </div> 
-            <div className="divNavB"> 
-              <button className={nav2Style} onClick={() => { setSideNavlink('option2') }}><BiNews style={{ fontSize: '1.5em' }} />Newsfeed</button> 
-              <i /> 
-            </div> 
-            <div className="divNavB"> 
-              <button className={nav3Style} onClick={() => { setSideNavlink('option3') }}><TbReportAnalytics style={{ fontSize: '1.5em' }} />Garbage Reports</button> 
-              <i /> 
-            </div> 
-            <div className="divNavB"> 
-              <button className={nav4Style} onClick={() => { setSideNavlink('option4') }}><FaRegMap style={{ fontSize: '1.5em' }} />Map</button> 
-              <i /> 
-            </div> 
-            <div className="divNavB"> 
-              <button className={nav5Style} onClick={() => { setSideNavlink('option5') }}><BiCalendar style={{ fontSize: '1.5em' }} />Schedule</button> 
-              <i /> 
-            </div> 
-            <div className="divNavB"> 
-              <button className={nav6Style} onClick={() => { setSideNavlink('option6') }}><MdPersonOutline style={{ fontSize: '1.5em' }} />User Management</button> 
-              <i /> 
-            </div> 
-          </div> 
+          {/* Profile Section */}
           <div className="profileSection">
             <div className="profilePicture small">
-              <img src={userlogo} alt="user-logo" className="logoImage"onClick={() => { setSideNavlink('option7') }} />
+              <img src={userlogo} alt="user-logo" className="logoImage" onClick={() => { setSideNavlink('option7') }} />
             </div>
-            <p className="adminName">{adminName}AdminName</p>
-            <button className="logoutButton" onClick={handleLogout}> 
-              <IoLogOutOutline /> 
-            </button> 
-          </div> 
-        </div> 
-        <div style={{ marginLeft: 300 }}> 
-          {openTab} 
-        </div> 
-      </div> 
-    </> 
-  ); 
-} 
+            <p className="adminName">{adminName}</p>
+            <button className="logoutButton" onClick={handleLogout}>
+              <IoLogOutOutline />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginLeft: 300 }}>
+          {openTab}
+        </div>
+      </div>
+    </>
+  );
+}

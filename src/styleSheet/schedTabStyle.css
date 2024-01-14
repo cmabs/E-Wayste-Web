@@ -6,11 +6,102 @@
     font-weight: bolder;
     font-family: Inter;
 }
-.sched-container {
-    display: flex;
-    border-radius: 20;
-    background-color: antiquewhite;
+
+/* schedTabStyle.css */
+
+.schedule-container {
     width: 100%;
-    height: 500px;
-    margin-inline-start: auto;
-}
+    height: 100%;
+    margin-left: 40px; /* Adjust the margin as needed */
+    background: #F9F9F9;
+    border-radius: 10px;
+    padding: 20px; /* Adjust the padding as needed */
+  }
+  
+  .tab-header-sched {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .schedule-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  .event-card {
+    width: 300px;
+    padding: 15px;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .event-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .event-details {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  /* Add more styles as needed */
+/* Add this to your schedTabStyle.css or create a new CSS file for event details styles */
+
+.event-details-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border: 2px solid #51AF5B;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 900px;
+
+    
+  
+  }
+  
+  .event-details-container h2 {
+    color: #51AF5B;
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  
+  .event-details-container p {
+    color: #333;
+    font-size: 16px;
+    margin: 8px 0;
+  }
+  
+  /* Add this class to your existing schedule-content */
+  .schedule-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  /* Add hover effect for event cards */
+  .event-card {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .event-card:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Add a unique background color for the selected event */
+  .event-card.selected {
+    background-color: #51AF5B;
+    color: white;
+  }

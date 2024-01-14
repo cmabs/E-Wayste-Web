@@ -22,7 +22,7 @@ export default function Login() {
         const userData = doc.data();
         return {
           id: doc.id,
-          ...userData
+          ...userData,
         };
       });
       if (users.length === 0) {
@@ -31,8 +31,8 @@ export default function Login() {
       }
       const loggedInUser = users[0];
       console.log("Logged in successfully! User ID:", loggedInUser.id);
-      // Log the user ID to the console
-      console.log("User ID:", loggedInUser.id);
+      // Log the usersAdmin ID to the console
+      console.log("usersAdmin ID:", loggedInUser.id);
       navigate("/Home");
     } catch (error) {
       console.error("Error logging in: ", error);

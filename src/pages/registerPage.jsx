@@ -1,74 +1,85 @@
-import { React, useState } from "react"; 
-import { NavLink } from "react-router-dom"; 
-import { getFirestore, collection, addDoc } from "firebase/firestore"; 
-import { db } from "../firebase-config"; 
-import Logo from '../images/E-Wayste-logo.png'; 
+import React, { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase-config";
+import Logo from "../images/E-Wayste-logo.png";
 
-export default function Register() { 
-  const [firstName, setFirstName] = useState(""); 
-  const [lastName, setLastName] = useState(""); 
-  const [username, setUsername] = useState(""); 
-  const [email, setEmail] = useState(""); 
-  const [password, setPassword] = useState(""); 
-  const [confirmPassword, setConfirmPassword] = useState(""); 
-  const [missingFields, setMissingFields] = useState([]); 
-  
-  const handleCreateAccount = async () => { 
+export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [missingFields, setMissingFields] = useState([]);
+  const navigate = useNavigate();
 
-    const missing = []; 
-    if (firstName.trim() === "") { 
-      missing.push("firstName"); 
-    } 
-    if (lastName.trim() === "") { 
-      missing.push("lastName"); 
-    } 
-    if (username.trim() === "") { 
-      missing.push("username"); 
-    } 
-    if (email.trim() === "") { 
-      missing.push("email"); 
-    } 
-    if (password.trim() === "") { 
-      missing.push("password"); 
-    } 
-    if (confirmPassword.trim() === "") { 
-      missing.push("confirmPassword"); 
-    } 
-    if (missing.length > 0) { 
-      setMissingFields(missing); 
-      return; 
-    } 
-    if (password !== confirmPassword) { 
-      alert("Passwords do not match"); 
-      return; 
-    } 
-    if (password.length < 6) { 
-      alert("Password must have at least 6 characters"); 
-      return; 
-    } 
-    const newUser = { 
-      firstName, 
-      lastName, 
-      username, 
-      email, 
-      password, 
-      confirmPassword, 
-    }; 
-    
-    try { 
-      const docRef = await addDoc(collection(db, "usersAdmin"), newUser); 
-      console.log("Document written with ID: ", docRef.id); 
-      alert("User account created successfully!"); 
-      setFirstName(""); 
-      setLastName(""); 
-      setUsername(""); 
-      setEmail(""); 
-      setPassword(""); 
-      setConfirmPassword(""); 
-    } catch (error) { 
-      console.error("Error adding document: ", error); 
-    } 
-  }; 
+  const handleCreateAccount = async () => {
+    const missing = [];
+    if (firstName.trim() === "") {
+      missing.push("firstName");
+    }
+    if (lastName.trim() === "") {
+      missing.push("lastName");
+    }
+    if (username.trim() === "") {
+      missing.push("username");
+    }
+    if (email.trim() === "") {
+      missing.push("email");
+    }
+    if (password.trim() === "") {
+      missing.push("password");
+    }
+    if (confirmPassword.trim() === "") {
+      missing.push("confirmPassword");
+    }
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    if (password.length < 6) {
+      alert("Password must have at least 6 characters");
+      return;
+    }
+
+    try {
+      // Create user in Firebase Authentication
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Get the newly created user's UID
+      const userId = userCredential.user.uid;
+
+      // Add user details to Firestore
+      const newUser = {
+        userId,
+        firstName,
+        lastName,
+        username,
+        email,
+      };
+      const docRef = await addDoc(collection(db, "usersAdmin"), newUser);
+
+      console.log("User account created successfully! User ID:", userId);
+      alert("User account created successfully!");
+      setFirstName("");
+      setLastName("");
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      navigate("/Login"); // Redirect to login page after successful registration
+    } catch (error) {
+      console.error("Error creating user account: ", error);
+      alert("Failed to create user account. Please try again.");
+    }
+  };
   return ( 
     <> 
       <div className="registerPage"> 
