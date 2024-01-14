@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import '../styleSheet/manageTabStyle.css';
 import { db } from '../firebase-config';
-import { getFirestore, collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc } from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
@@ -11,19 +12,26 @@ export default function UserManage() {
   const [users, setUsers] = useState([]);
   const [deleteUserId, setDeleteUserId] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isPendingUsers, setIsPendingUsers] = useState(false);
+  const storage = getStorage();
 
   const fetchUsers = async () => {
     try {
       const firestore = getFirestore();
-      const usersCollection = collection(firestore, 'users');
+      const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
       const usersSnapshot = await getDocs(usersCollection);
 
       const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setUsers(usersData);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
     }
   };
+
+  useEffect(() => {
+    console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
+    fetchUsers();
+  }, [isPendingUsers]);
 
   useEffect(() => {
     console.log('Fetching users...');
@@ -45,6 +53,53 @@ export default function UserManage() {
     }
   };
 
+  const handleApproveUser = async (event, userId) => {
+    event.preventDefault();
+    try {
+      const firestore = getFirestore();
+      
+      const pendingUserRef = doc(firestore, 'pendingUsers', userId);
+      const pendingUserSnapshot = await getDoc(pendingUserRef);
+      
+      if (pendingUserSnapshot.exists()) {
+        const userData = pendingUserSnapshot.data();
+        const usersCollection = collection(firestore, 'users');
+        await addDoc(usersCollection, userData);
+        await deleteDoc(pendingUserRef);
+        console.log('User approved successfully!');
+        fetchUsers();
+      } else {
+        console.error('User not found in pendingUsers collection.');
+      }
+    } catch (error) {
+      console.error('Error approving user:', error);
+    }
+  };
+
+  const handleRejectUser = async (event, userId) => {
+    event.preventDefault();
+
+    try {
+      const firestore = getFirestore();
+      const pendingUserRef = doc(firestore, 'pendingUsers', userId);
+      await deleteDoc(pendingUserRef);
+      
+      console.log('User rejected successfully!');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error rejecting user:', error);
+    }
+  };
+
+  const handleImageClick = async (userWorkID, imageFileName) => {
+    try {
+      const imageUrl = await getDownloadURL(ref(storage, `${userWorkID}/${imageFileName}`));
+      console.log('Displaying image:', imageUrl);
+    } catch (error) {
+      console.error('Error getting image download URL:', error);
+    }
+  };
+
   function UserListContent() {
     return (
       <ul style={{ listStyleType: 'none', padding: 0 }}>
@@ -55,21 +110,66 @@ export default function UserManage() {
                 <div style={{ width: '15%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
                   <p>{`${user.firstName} ${user.lastName}`}</p>
                 </div>
-                <div style={{ width: '15%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
+                <div style={{ width: '18%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
                   <p>{user.username}</p>
                 </div>
-                <div style={{ width: '18%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
+                <div style={{ width: '23%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
                   <p>{user.email}</p>
                 </div>
-                <div style={{ width: '23%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
+                <div style={{ width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
                   <p>{user.accountType}</p>
                 </div>
                 <div style={{ width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(200,200,200)', overflow: 'hidden' }}>
                   <p>{`${user.barangay}, ${user.municipality}, ${user.province}`}</p>
                 </div>
+                {isPendingUsers && (
+                   <div style={{ width: '15%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
+                   {user.associatedImage && (
+                     <a
+                       href="#"
+                       onClick={(event) => {
+                         event.preventDefault();
+                         handleImageClick(user.associatedImage);
+                       }}
+                     >
+                       <img src={user.associatedImage} alt="Document" style={{ maxWidth: '100%', height: 'auto' }} />
+                       <span style={{ textDecoration: 'underline', color: 'blue', cursor: 'pointer' }}></span>
+                     </a>
+                   )}
+                 </div>
+               )}
                 <div style={{ width: '9%', overflow: 'hidden', justifyContent: 'space-around', alignItems: 'center' }}>
-                  <MdOutlineModeEdit style={{ fontSize: 24, cursor: 'pointer', color: 'green' }} />
-                  <MdDelete style={{ fontSize: 24, gap: 5, cursor: 'pointer', color: 'red' }} onClick={(event) => handleDeleteUser(event, user.id)} />
+                  {isPendingUsers && (
+                    <>
+                      <ImCheckmark
+                        style={{
+                          fontSize: 24,
+                          cursor: 'pointer',
+                          color: 'green',
+                          marginRight: '5px',
+                        }}
+                        onClick={(event) => handleApproveUser(event, user.id)}
+                      />
+                      <MdDelete
+                        style={{
+                          fontSize: 24,
+                          cursor: 'pointer',
+                          color: 'red',
+                        }}
+                        onClick={(event) => handleRejectUser(event, user.id)}
+                      />
+                    </>
+                  )}
+                  {/* Conditionally show "Edit" and "Delete" buttons based on whether it is pending users or not */}
+                  {!isPendingUsers && (
+                    <>
+                      <MdOutlineModeEdit style={{ fontSize: 24, cursor: 'pointer', color: 'green' }} />
+                      <MdDelete
+                        style={{ fontSize: 24, gap: 5, cursor: 'pointer', color: 'red' }}
+                        onClick={(event) => handleDeleteUser(event, user.id)}
+                      />
+                    </>
+                  )}
                 </div>
               </button>
             </div>
@@ -82,7 +182,10 @@ export default function UserManage() {
   return (
     <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
       <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-        <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>User Management</h1>
+        <button className="pending-users-button" onClick={() => setIsPendingUsers(!isPendingUsers)}>Pending Users</button>
+        <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
+          {isPendingUsers ? 'Pending Users' : 'User Management'}
+        </h1>
         <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'row' }}>
             <input type="text" placeholder="Search" className="searchBar" />
@@ -93,7 +196,7 @@ export default function UserManage() {
           </button>
         </div>
       </div>
-      <div style={{ marginTop: 50, marginBottom: 40, backgroundColor: 'rgb(243,243,243)', padding: 10, borderRadius: 20, width: 1100 }}>
+      <div style={{ marginTop: 70, marginBottom: 40, backgroundColor: 'rgb(243,243,243)', padding: 10, borderRadius: 20, width: 1100 }}>
         <div style={{ display: 'flex', width: '100%', borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(210,210,210)', marginBottom: 10, fontFamily: 'Inter', fontWeight: 500, fontSize: 14 }}>
           <div style={{ display: 'flex', marginLeft: 60, overflow: 'hidden', justifyContent: 'center' }}>
             <p>Name</p>
@@ -111,7 +214,7 @@ export default function UserManage() {
             <p>Location</p>
           </div>
           <div style={{ display: 'flex', marginLeft: 100, overflow: 'hidden', justifyContent: 'center' }}>
-            <p>Action</p>
+            <p>Action</p> 
           </div>
         </div>
         {UserListContent()}

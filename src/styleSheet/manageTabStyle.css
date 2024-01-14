@@ -153,3 +153,21 @@ button.editB {
     color: white;
   }
   
+  .pending-users-button {
+    position: absolute;
+    top: 130px;
+    left: 340px;
+    background-color: green;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .pending-users-button:hover {
+    background-color: darkgreen;
+    transition: background-color 0.3s ease-in-out;
+    transform: scale(1.05);
+  }
