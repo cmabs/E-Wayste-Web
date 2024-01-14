@@ -1,5 +1,6 @@
 .homePage {
     display: flex;
+    flex: 1;
     position: relative;
     width: 100%;
     background-color: #ffffff;
@@ -32,7 +33,7 @@
 .sideNav {
     display: flex;
     position: fixed;
-    height: 800px;
+    height: 100%;
     width: 300px;
     top: -1px;
     background-color: rgb(244, 253, 240);
