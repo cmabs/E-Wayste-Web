@@ -3,6 +3,7 @@ import '../styleSheet/manageTabStyle.css';
 import { db, storage } from '../firebase-config';
 import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
@@ -64,7 +65,6 @@ export default function UserManage() {
       const userRef = doc(firestore, 'users', userId);
       await deleteDoc(userRef);
       console.log('User deleted successfully!');
-      // Fetch the updated list of users after deletion
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -75,15 +75,25 @@ export default function UserManage() {
     event.preventDefault();
     try {
       const firestore = getFirestore();
-      
+      const auth = getAuth();
+  
       const pendingUserRef = doc(firestore, 'pendingUsers', userId);
       const pendingUserSnapshot = await getDoc(pendingUserRef);
-      
+  
       if (pendingUserSnapshot.exists()) {
         const userData = pendingUserSnapshot.data();
+  
+        // Create user in Firebase Authentication
+        const { email, password } = userData; // You need to have a password for the user
+        await createUserWithEmailAndPassword(auth, email, password);
+  
+        // Remove user from pendingUsers collection
+        await deleteDoc(pendingUserRef);
+  
+        // Update the users collection with the approved user data
         const usersCollection = collection(firestore, 'users');
         await addDoc(usersCollection, userData);
-        await deleteDoc(pendingUserRef);
+  
         console.log('User approved successfully!');
         fetchUsers();
       } else {
@@ -108,15 +118,6 @@ export default function UserManage() {
       console.error('Error rejecting user:', error);
     }
   };
-
-  // const handleImageClick = async () => {
-  //   try {
-  //     const imageUrl = await getDownloadURL(ref(storage, `${userWorkID}/${imageFileName}`));
-  //     console.log('Displaying image:', imageUrl);
-  //   } catch (error) {
-  //     console.error('Error getting image download URL:', error);
-  //   }
-  // };
 
   function UserListContent() {
     return (
