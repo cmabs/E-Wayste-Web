@@ -58,18 +58,19 @@
 }
 
 
-
+.collectionB{
+    flex-direction: column;
+}
 .collectionB button {
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 50%;
     height: 250px;
     background-color: white;
     border-radius: 10px;
     border-style: solid;
     border-width: 2px;
     border-color: rgb(0, 110, 0);
-    display: flex;
     padding: 15px;
     padding-top: 10px;
     font-family: Inter;

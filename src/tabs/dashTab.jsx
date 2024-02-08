@@ -101,20 +101,17 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-        <h4 style={{ fontFamily: 'Inter', color: 'rgb(50, 50, 50)', fontWeight: 800, marginBottom: 5 }}>Map Overview</h4>
-        <div className="mapDashboard">
-        </div>
         <h4 style={{ fontFamily: 'Inter', color: 'rgb(50, 50, 50)', fontWeight: 800, marginBottom: 5 }}>Summary</h4>
         <div style={{ display: 'flex', flexDirection: 'row', gap: 20 }}>
-          <div className="orangeBox">
+          <div className="orangeBox2">
             <p style={{ fontWeight: 700, color: 'rgb(60,60,60)' }}>TOTAL USERS</p>
             <p style={{ fontWeight: 700, fontSize: 48, color: 'rgb(50,50,50)', marginTop: -3 }}>{users.length}</p>
           </div>
-          <div className="orangeBox">
+          <div className="orangeBox2">
             <p style={{ fontWeight: 700, color: 'rgb(60,60,60)' }}>TOTAL REPORTS</p>
             <p style={{ fontWeight: 700, fontSize: 48, color: 'rgb(50,50,50)', marginTop: -3 }}>{generalUsersReports.length}</p>
           </div>
-          <div className="orangeBox">
+          <div className="orangeBox2">
             <p style={{ fontWeight: 700, color: 'rgb(60,60,60)' }}>REGISTERED LGUs</p>
             <p style={{ fontWeight: 700, fontSize: 48, color: 'rgb(50,50,50)', marginTop: -3 }}>{totalLGUs}</p>
           </div>

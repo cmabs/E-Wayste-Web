@@ -12,13 +12,13 @@ export default function Map() {
         let temp = [];
         for (let i = 0; i < 50; i++) {
             temp.push(
-                <div className="collectionB">
+                <div className="collectionB"> 
                     <button>
                         <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
                             <div style={{display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start'}}>
                                 <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)'}}>Plate Number</p>
                                 <p style={{padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800}}>HAS 1234</p>
-                            </div>
+                             </div>
                             <div style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
                                 <GiMineTruck style={{fontSize: 50, color: 'rgb(110,170,46)'}} />
                             </div>
