@@ -16,6 +16,12 @@ Daisy Ree Tabal
     background-color: rgb(255, 219, 172);
     border-radius: 25px;
     align-items: center;
+    transition: transform 0.3s ease;
+}
+.orangeBox2:hover{
+    transform: scale(1.05); 
+    background: #EE7C29;
+
 }
 .mapDashboard {
     height: 400px;

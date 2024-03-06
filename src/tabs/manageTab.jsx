@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import '../styleSheet/manageTabStyle.css';
 import { db, storage } from '../firebase-config';
-import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, where, query } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
-import { FaSearch, FaBell } from 'react-icons/fa';
+import { FaSearch, FaBell, FaArrowLeft } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
+
+
+
 
 export default function UserManage() {
   const [users, setUsers] = useState([]);
@@ -22,6 +25,7 @@ export default function UserManage() {
   const [openImage, setOpenImage] = useState(false);
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "userWorkID/");
+  const [loggedInUser, setLoggedInUser] = useState(null);
 
   const [isAddSchedOpen, setAddSchedOpen] =useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
@@ -32,6 +36,63 @@ export default function UserManage() {
 
 
   const [selectedSection, setSelectedSection] = useState(null);
+  const [collectors, setCollectors] = useState([]); 
+  const [searchTerm, setSearchTerm] = useState(''); 
+
+  useEffect(() => {
+    const fetchLoggedInUserData = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (user) {
+          setLoggedInUser(user);
+        }
+      } catch (error) {
+        console.error('Error fetching logged-in user data:', error);
+      }
+    };
+
+    fetchLoggedInUserData();
+  }, []);
+
+  useEffect(() => {
+    if (loggedInUser && loggedInUser.uid) {
+      fetchGarbageCollectors(loggedInUser.uid);
+    }
+  }, [loggedInUser]);
+
+  const handleSearch = () => {
+    const filtered = users.filter(user => {
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+      const collectorUsername = user.username ? user.username.toLowerCase() : '';
+      const searchTermLower = searchTerm.toLowerCase();
+  
+      return (
+        collectorUsername.includes(searchTermLower) ||
+        fullName.includes(searchTermLower) ||
+        user.username.includes(searchTermLower)
+      );
+    });
+    setUsers(filtered);
+  };
+  
+  
+  const fetcCollectorUsers = async () => {
+    try {
+      const firestore = getFirestore();
+      const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
+      const usersSnapshot = await getDocs(usersCollection);
+
+      const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUsers(usersData);
+    } catch (error) {
+      console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
+    }
+  };
+
+  useEffect(() => {
+    fetcCollectorUsers();
+  }, [isPendingUsers]);
 
 
   const toggleUserListVisibility = () => {
@@ -58,8 +119,25 @@ export default function UserManage() {
     if (isPendingUsers) {
       return null; // Return null when Pending Users is active
     }
-  
+
     if (selectedSection === "collector" && isCollectorOpen) {
+      const collectors = users.filter(user => user.accountType === "Garbage Collector");
+      const collectorsJSX = collectors.map(collector => (
+        <tr key={collector.id}  style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+          <td style={{ borderRight: '1px solid #ddd' }}>{collector.username}</td>
+          <td style={{ borderRight: '1px solid #ddd' }}>{collector.accountType}</td>
+          <td style ={{color:'red', borderRight: '1px solid #ddd'}}>Active</td>
+          <td style={{ borderRight: '1px solid #ddd' }}>{`${collector.barangay}, ${collector.municipality}, ${collector.province}`}</td>
+          <td style={{ borderRight: '1px solid #ddd' }}>
+          <MdOutlineModeEdit style={{ fontSize: 24, cursor: 'pointer', color: 'green' }} />
+           <MdDelete
+              style={{ fontSize: 24, gap: 5, cursor: 'pointer', color: 'red' }}
+              onClick={(event) => handleDeleteUser(event, collector.id)}
+            />
+        </td>
+        </tr>
+      ));
+
       return (
         <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
           <thead>
@@ -71,21 +149,13 @@ export default function UserManage() {
               <th>Action</th>
             </tr>
           </thead>
-          <tbody className="reportTableBody" style={{ width: 2000 }}>
-          <tr style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-            <td style={{ borderRight: '1px solid #ddd' }}>Daisy</td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            </tr>
-          </tbody>
+          <tbody className="reportTableBody">{collectorsJSX}</tbody>
         </table>
       );
-    } else if (selectedSection === "trucks" && isTruckOpen) {
+    }  else if (selectedSection === "trucks" && isTruckOpen) {
       return (
         <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
+          <thead>
             <tr>
               <th>Truck No.</th>
               <th>Plate No.</th>
@@ -94,13 +164,13 @@ export default function UserManage() {
               <th>Action</th>
             </tr>
           </thead>
-          <tbody className="reportTableBody" >
+          <tbody className="reportTableBody">
             <tr style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-            <td style={{ borderRight: '1px solid #ddd' }}>1234</td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
-            <td style={{ borderRight: '1px solid #ddd' }}></td>
+              <td style={{ borderRight: '1px solid #ddd' }}>1234</td>
+              <td style={{ borderRight: '1px solid #ddd' }}></td>
+              <td style={{ borderRight: '1px solid #ddd' }}></td>
+              <td style={{ borderRight: '1px solid #ddd' }}></td>
+              <td style={{ borderRight: '1px solid #ddd' }}></td>
             </tr>
           </tbody>
         </table>
@@ -110,28 +180,45 @@ export default function UserManage() {
     }
   };
   
-  const fetchUsers = async () => {
+  const fetchGarbageCollectors = async (loggedInUserId) => {
     try {
       const firestore = getFirestore();
-      const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
-      const usersSnapshot = await getDocs(usersCollection);
+      const usersCollection = collection(firestore, 'users');
+      const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'));
 
-      const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const querySnapshot = await getDocs(q);
+
+      const usersData = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(user => user.lguCode === loggedInUserId); // Assuming LGU code is stored as 'lguCode' in user data
+
       setUsers(usersData);
     } catch (error) {
-      console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
+      console.error('Error fetching garbage collectors:', error);
     }
   };
+  
+  const fetchUsers = async () => {
+  try {
+    const firestore = getFirestore();
+    const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
+    const usersSnapshot = await getDocs(usersCollection);
 
-  useEffect(() => {
-    console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
-    fetchUsers();
-  }, [isPendingUsers]);
+    const usersData = usersSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(user => user.accountType === 'Garbage Collector' && user.lguCode === loggedInUser.lguCode);
 
-  useEffect(() => {
-    console.log('Fetching users...');
-    fetchUsers();
-  }, []);
+    setUsers(usersData);
+  } catch (error) {
+    console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
+  }
+};
+
+useEffect(() => {
+  console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
+  fetchUsers();
+}, [isPendingUsers, loggedInUser]);
+
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -314,10 +401,22 @@ export default function UserManage() {
             {isPendingUsers ? 'Pending Users' : 'User Management'}
           </h1>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'row' }}>
-              <input type="text" placeholder="Search" className="searchBar" />
-              <button className="searchButton"><FaSearch style={{ fontSize: 20 }} /></button>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <input 
+            type="text" 
+            placeholder="Search" 
+            className="searchBar" 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} // Add onChange event handler
+          />
+          <button 
+            className="searchButton" 
+            onClick={handleSearch} // Add onClick event handler
+          >
+            <FaSearch style={{ fontSize: 20 }} />
+          </button>
+        </div>
+
             <button className="notifIcon">
               <FaBell />
             </button>

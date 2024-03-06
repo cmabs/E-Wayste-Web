@@ -1,42 +1,28 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebase-config";
 import "../styleSheet/registerPageStyle.css";
 import Logo from "../images/E-Wayste-logo.png";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const auth = getAuth(); // Initialize Firebase Auth
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevent the form from submitting the traditional way
     try {
-      const userQuery = query(
-        collection(db, "usersAdmin"),
-        where("username", "==", username),
-        where("password", "==", password)
-      );
-      const querySnapshot = await getDocs(userQuery);
-      const users = querySnapshot.docs.map((doc) => {
-        const userData = doc.data();
-        return {
-          id: doc.id,
-          ...userData,
-        };
-      });
-      if (users.length === 0) {
-        alert("User not found. Please check your credentials.");
-        return;
-      }
-      const loggedInUser = users[0];
-      console.log("Logged in successfully! User ID:", loggedInUser.id);
-      // Log the usersAdmin ID to the console
-      console.log("usersAdmin ID:", loggedInUser.id);
-      navigate("/Home");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log('Logged in successfully!');
+      console.log('User UID:', user.uid); // Use user UID here as needed
+      navigate('/Home'); // Navigate to the Home page
+      
     } catch (error) {
-      console.error("Error logging in: ", error);
-      alert("Failed to log in. Please check your credentials.");
+      console.error('Error logging in: ', error);
+      alert('Failed to log in. Please check your credentials.');
     }
   };
 
@@ -68,16 +54,23 @@ export default function Login() {
             </h2>
             <div className="inputBox">
               <input
-                type="text"
+                type="email"
                 required="required"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
               />
-              <p>Username</p>
+              <p>Email</p>
               <i></i>
             </div>
-            <div className="inputBox"> 
-              <input type="password" required="required" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="inputBox">
+              <input
+                type="password"
+                required="required"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+              />
               <p>Password</p>
               <i></i>
             </div>

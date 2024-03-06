@@ -1,16 +1,70 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, where, query  } from 'firebase/firestore';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import '../styleSheet/schedTabStyle.css';
+import { db } from '../firebase-config';
 
 
 export default function Schedule() {
   const [selectedType, setSelectedType] = useState("");
   const [isDetailsOpen, setDetailsOpen] = useState(false);
   const [isAddSchedOpen, setAddSchedOpen] =useState(false);
+
   const [isCollectionModalOpen, setCollectionModalOpen] = useState(false);
   const [isEventsModalOpen, setEventsModalOpen] = useState(false);
   const [isAssignmentsModalOpen, setAssignmentsModalOpen] = useState(false);
+
+  const [scheduleData, setScheduleData] = useState([]);
+
+  const [collectionData, setCollectionData] = useState([]);
+  const [eventsData, setEventsData] = useState([]);
+  const [assignmentsData, setAssignmentsData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch data for Collection
+        const collectionCollection = collection(db, 'schedule').where('type', '==', 'Collection');
+        const collectionSnapshot = await getDocs(collectionCollection);
+        const collectionData = collectionSnapshot.docs.map(doc => doc.data());
+        setCollectionData(collectionData);
+
+        // Fetch data for Events
+        const eventsCollection = collection(db, 'schedule').where('type', '==', 'Event');
+        const eventsSnapshot = await getDocs(eventsCollection);
+        const eventsData = eventsSnapshot.docs.map(doc => doc.data());
+        setEventsData(eventsData);
+
+        // Fetch data for Assignments
+        const assignmentsCollection = collection(db, 'schedule').where('type', '==', 'Assignment');
+        const assignmentsSnapshot = await getDocs(assignmentsCollection);
+        const assignmentsData = assignmentsSnapshot.docs.map(doc => doc.data());
+        setAssignmentsData(assignmentsData);
+      } catch (error) {
+        console.error('Error fetching schedule data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
  
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        const scheduleCollection = collection(db, 'schedule');
+        const scheduleSnapshot = await getDocs(scheduleCollection);
+        const data = scheduleSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setScheduleData(data);
+      } catch (error) {
+        console.error('Error fetching schedule data:', error);
+      }
+    };
+
+    fetchScheduleData();
+  }, []); 
+    const eventsLength = scheduleData.filter(item => item.type === 'Event').length;
+    const assignmentsLength = scheduleData.filter(item => item.type === 'Assignment').length;
+    const collectionLength = scheduleData.filter(item => item.type === 'Collection').length;
 
       const [selectedTime, setSelectedTime] = useState({
         hour: '',
@@ -26,39 +80,29 @@ export default function Schedule() {
     };
 
 
-  const handleSelectChange = (event) => {
-    const selectedValue = event.target.value;
-    setSelectedType(selectedValue);
-
-    // Check the selected value and open the corresponding modal
-    switch (selectedValue) {
-      case "collection":
+    const handleSelectChange = (selectedValue) => {
+      setSelectedType(selectedValue);
+  
+      if (selectedValue === "collection") {
         setCollectionModalOpen(true);
         setEventsModalOpen(false);
         setAssignmentsModalOpen(false);
-        break;
-      case "events":
+      } else if (selectedValue === "events") {
         setEventsModalOpen(true);
         setCollectionModalOpen(false);
         setAssignmentsModalOpen(false);
-        break;
-      case "assignments":
+      } else if (selectedValue === "assignments") {
         setAssignmentsModalOpen(true);
         setCollectionModalOpen(false);
         setEventsModalOpen(false);
-        break;
-      default:
+      } else {
         setCollectionModalOpen(false);
         setEventsModalOpen(false);
         setAssignmentsModalOpen(false);
-        break;
-    }
-  };
+      }
+    };
 
-      const handleButtonClick = () => {
-        // Add logic here to perform any actions before opening the modal
-        setDetailsOpen(true);
-      };
+  
       const handleAddSchedClick =() =>{
         
         setAddSchedOpen(!isAddSchedOpen);
@@ -76,73 +120,7 @@ export default function Schedule() {
       });
     };
       
-function ScheduleList() {
- 
-  let temp = [];
-  for (let i = 0; i < 10; i++) {
-    temp.push(
-      <div className="scheduleB" key={i}>
-        <button onClick={handleButtonClick}>
-          <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-            <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start' }}>
-              <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 800 }}>Clean-Up Drive -Talamban Cebu City</p>
-              <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 600, color: 'rgb(120,120,120)' }}>January 2, 2024</p>
-            </div>
-            <div> 9:00 AM</div>
-          </div>
-        </button>
-      </div>
-    );
-  }
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', maxHeight: '600px' }}>
-      {temp}
-      {isDetailsOpen && (
-        <div className="modal-overlay">
-        <div className="modal-content">
-          <div style={{ display: 'flex', flexDirection: 'column'}}>
-          <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 25, fontWeight: 800, marginBottom: 8 }}>
-           Schedule Details
-          </h1>
-          <h1 style={{ fontSize: '1.1em', fontWeight: 600, fontFamily: 'Inter', padding: 0, margin: 8, marginBottom: 5}}>Type </h1>
-              <input
-                type="text"
-                style={{ backgroundColor: '#e0e0e0', padding: '15px', borderRadius: '3px', border: '1px solid #0D5601', width: 450, marginLeft: 7}}
-              />
-              <p style={{ fontSize: '1.1em', fontWeight: 600, fontFamily: 'Inter',  padding: 0, margin: 8, marginBottom: 5}}>Description </p>
-              <input
-                type="text"
-                style={{ backgroundColor: '#e0e0e0', padding: '15px', borderRadius: '3px', border: '1px solid #0D5601', width: 450, marginLeft: 7}}
-              />
-               <p style={{ fontSize: '1.1em', fontWeight: 600, fontFamily: 'Inter',  padding: 0, margin: 8, marginBottom: 5}}>Location </p>
-              <input
-                type="text"
-                style={{ backgroundColor: '#e0e0e0', padding: '15px', borderRadius: '3px', border: '1px solid #0D5601', width: 450, marginLeft: 7}}
-              />
-               <p style={{ fontSize: '1.1em', fontWeight: 600, fontFamily: 'Inter',  padding: 0, margin: 8, marginBottom: 5}}>Title </p>
-              <input
-                type="text"
-                style={{ backgroundColor: '#e0e0e0', padding: '15px', borderRadius: '3px', border: '1px solid #0D5601', width: 450, marginLeft: 7}}
-              />
-               <p style={{ fontSize: '1.1em', fontWeight: 600, fontFamily: 'Inter',  padding: 0, margin: 8, marginBottom: 5}}>Date </p>
-              <input
-                type="text"
-                style={{ backgroundColor: '#e0e0e0', padding: '15px', borderRadius: '3px', border: '1px solid #0D5601', width: 450, marginLeft: 7}}
-              />
-               <p style={{ fontSize: '1.1em', fontWeight: 600, fontFamily: 'Inter',  padding: 0, margin: 8, marginBottom: 5}}>Time</p>
-              <input
-                type="text"
-                style={{ backgroundColor: '#e0e0e0', padding: '15px', borderRadius: '3px', border: '1px solid #0D5601', width: 450, marginLeft: 7}}
-              />
-            </div>
-           <button style={{backgroundColor: '#51AF5B', borderRadius:10, borderColor: '#51AF5B', marginTop: 20}} onClick={() => setDetailsOpen(false)}>Cancel</button>
-        </div>
-      </div>
-      )}
-    </div>
-  );
-}
  
 function addSideSchedule() {
   return (
@@ -157,15 +135,12 @@ function addSideSchedule() {
           onChange={handleSelectChange}
           style={{ fontSize: '16px', backgroundColor: '#BDE47C', padding: '8px 6px', fontSize: 23, borderColor: '#51AF5B', borderRadius: 5,
            width: 720, textAlignLast: 'center', lineHeight: '1.5' }}>
-          <option value="Select Type">Select Type</option>
           <option value="collection">Collection</option>
           <option value="events">Events</option>
           <option value="assignments">Assignments</option>
  
         </select>
       </div>
-      
-      {/* Conditionally render the modals based on the selected value */}
       {isCollectionModalOpen && (
         <div>
          <div className="selectType" >
@@ -547,8 +522,7 @@ function addSideSchedule() {
       {/* Other components or content */}
     </div>
   );
-}
-  
+} 
     return (
      <div style={{ marginLeft: 40, marginTop: 10, width: 902 }}>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
@@ -558,9 +532,18 @@ function addSideSchedule() {
         </div>  
           {/* {addSideSchedule()} */}
         <div className="schedule-container">
-          <div className="schedule-Total">
-            <p style={{ margin: 8, display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 600}}>Total Schedules</p>
-            <p style={{ margin:0, display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 'bold', fontSize: '3.1em',}}>10</p>
+          <div className="schedule-Total" >
+            <p style={{ marginTop: 20, display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 600}}>Total Collection</p>
+            <p style={{ margin:0, display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 'bold', fontSize: '4.1em',}}>{collectionLength}</p>
+           </div> 
+           <div className="schedule-Total" style={{ marginLeft: 310}}>
+            <p style={{marginTop: 20,display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 600}}>Total Events</p>
+            <p style={{ margin:0, display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 'bold',  fontSize: '4.1em',}}>{eventsLength}</p>
+           
+           </div> 
+           <div className="schedule-Total" style={{ marginLeft: 620}}>
+            <p style={{marginTop: 15,display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 600}}>Total Assigments</p>
+            <p style={{ margin:0, display:'flex', fontFamily:'Inter', justifyContent:'center', fontWeight: 'bold', fontSize: '4.1em',}}>{assignmentsLength}</p>
            
            </div> 
           </div>
@@ -571,28 +554,22 @@ function addSideSchedule() {
            </div> 
             </div>
           <div className="filterSchedule">
-           <button className="all">
-              <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
-                <div style={{display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start'}}>
-                    <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600}}>All</p>    
-                </div>
-              </div>
-            </button>   
-            <button className="collection">
+          
+            <button className="collection" onClick={() => handleSelectChange("collection")}>
               <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
                 <div style={{display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start'}}>
                     <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600}}>Collection</p>    
                 </div>
               </div>
             </button>     
-            <button className="events">
+            <button className="events" onClick={() => handleSelectChange("events")}>
               <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
                 <div style={{display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start'}}>
                     <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600}}>Events</p>    
                 </div>
               </div>
             </button>     
-            <button className="assignments">
+            <button className="assignments" onClick={() => handleSelectChange("assignments")}>
               <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
                 <div style={{display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start'}}>
                     <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600}}>Assignments</p>    
@@ -605,7 +582,78 @@ function addSideSchedule() {
                     <p style={{padding: 3, margin: 0, marginBottom: 3, fontWeight: 600}}>+ AddSchedule</p>    
                 </div>
               </div>
-            </button>   
+            </button>  
+          <div style={{marginTop: 15}}>
+            {isCollectionModalOpen && (
+              <table style={{backgroundColor: '#E5E4E2', border: '2px solid #E5E4E2', borderCollapse: 'collapse', width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Location</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody className="schedTableBody">
+              {collectionData.map(item => (
+              <tr key={item.id} style={{ border: '1px solid #ddd', textAlign: 'center' }}>
+                <td style={{ borderRight: '1px solid #ddd' }}>{item.title}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{item.description}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{item.location}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{item.selectedDate}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{item.time}</td>
+              </tr>
+            ))}
+              </tbody>
+            </table>
+            )}
+            {isEventsModalOpen && (
+              <table style={{backgroundColor: '#E5E4E2', border: '2px solid #E5E4E2', borderCollapse: 'collapse', width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Location</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody className="schedTableBody">
+                <tr style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+                  <td style={{ borderRight: '1px solid #ddd' }}>1234</td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                </tr>
+              </tbody>
+            </table>
+            )}
+
+            {isAssignmentsModalOpen && (
+              <table style={{ backgroundColor: '#E5E4E2',border: '2px solid #E5E4E2', borderCollapse: 'collapse', width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Location</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody className="schedTableBody">
+                <tr style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+                  <td style={{ borderRight: '1px solid #ddd' }}>1234</td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                  <td style={{ borderRight: '1px solid #ddd' }}></td>
+                </tr>
+              </tbody>
+            </table>
+            )}
+        </div>
             {isAddSchedOpen && (
               <div className="modal-overlay">
                 {addSideSchedule()}
@@ -613,12 +661,11 @@ function addSideSchedule() {
             )}
             {!isAddSchedOpen && (
                 <div className="schedule-set">
-                  {ScheduleList()}
+                
                 </div>
             )}
            </div>
           </div>
-         
       </div>
    
     );
