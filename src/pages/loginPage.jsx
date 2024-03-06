@@ -1,42 +1,59 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebase-config";
+import { getDocs, collection, query, where } from 'firebase/firestore';
 import "../styleSheet/registerPageStyle.css";
 import Logo from "../images/E-Wayste-logo.png";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const auth = getAuth(); // Initialize Firebase Auth
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
     try {
-      const userQuery = query(
-        collection(db, "usersAdmin"),
-        where("username", "==", username),
-        where("password", "==", password)
-      );
-      const querySnapshot = await getDocs(userQuery);
-      const users = querySnapshot.docs.map((doc) => {
-        const userData = doc.data();
-        return {
-          id: doc.id,
-          ...userData,
-        };
-      });
-      if (users.length === 0) {
-        alert("User not found. Please check your credentials.");
-        return;
-      }
-      const loggedInUser = users[0];
-      console.log("Logged in successfully! User ID:", loggedInUser.id);
-      // Log the usersAdmin ID to the console
-      console.log("usersAdmin ID:", loggedInUser.id);
-      navigate("/Home");
+      // Check if the entered identifier is an email or username
+      const isEmail = identifier.includes('@');
+      const userCredential = isEmail
+        ? await signInWithEmailAndPassword(auth, identifier, password)
+        : await signInWithUsernameAndPassword(identifier, password);
+
+      const user = userCredential.user;
+      console.log('Logged in successfully!');
+      console.log('User UID:', user.uid);
+      navigate('/Home');
     } catch (error) {
-      console.error("Error logging in: ", error);
-      alert("Failed to log in. Please check your credentials.");
+      console.error('Error logging in: ', error);
+      alert('Failed to log in. Please check your credentials.');
+    }
+  };
+
+  // Create a custom authentication method for username/password
+  const signInWithUsernameAndPassword = async (username, password) => {
+    try {
+      // Query the 'usersAdmin' collection for the provided username
+      const usersRef = collection(db, 'usersAdmin');
+      const q = query(usersRef, where('username', '==', username));
+      const querySnapshot = await getDocs(q);
+
+      // Check if a user with the provided username exists
+      if (querySnapshot.docs.length === 0) {
+        throw new Error('User not found');
+      }
+
+      // Get the first user from the query result
+      const userData = querySnapshot.docs[0].data();
+
+      // Use signInWithEmailAndPassword with the user's email and provided password
+      const userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
+
+      return userCredential;
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -68,16 +85,20 @@ export default function Login() {
             </h2>
             <div className="inputBox">
               <input
-                type="text"
                 required="required"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
               />
-              <p>Username</p>
+              <p>Email</p>
               <i></i>
             </div>
-            <div className="inputBox"> 
-              <input type="password" required="required" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="inputBox">
+              <input
+                type="password"
+                required="required"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
               <p>Password</p>
               <i></i>
             </div>

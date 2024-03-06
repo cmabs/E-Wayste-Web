@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [users, setUsers] = useState([]);
   const [generalUsersReports, setGeneralUsersReports] = useState([]);
   const [totalLGUs, setTotalLGUs] = useState(0);
+  const [lguCode, setLguCode] = useState("");   
 
   const fetchUsers = async () => {
     try {
@@ -21,6 +22,12 @@ export default function Dashboard() {
       console.error('Error fetching users:', error);
     }
   };
+
+  useEffect(() => {
+    // Retrieve lguCode from localStorage
+    const storedLguCode = localStorage.getItem("lguCode");
+    setLguCode(storedLguCode || ""); // Set the lguCode to state
+  }, []); 
 
   useEffect(() => {
     console.log('Fetching users...');
@@ -91,6 +98,7 @@ export default function Dashboard() {
       <div style={{ marginLeft: 40, marginTop: 40 }}>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0 }}>Dashboard</h1>
+          <p style={{ fontFamily: 'Inter', color: 'rgb(50, 50, 50)', fontSize: 16, fontWeight: 600, marginBottom: 5 }}>LGU Code: {lguCode}</p> {/* Display the lguCode */}
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <input type="text" placeholder="Search" className="searchBar" />
@@ -101,20 +109,17 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-        <h4 style={{ fontFamily: 'Inter', color: 'rgb(50, 50, 50)', fontWeight: 800, marginBottom: 5 }}>Map Overview</h4>
-        <div className="mapDashboard">
-        </div>
         <h4 style={{ fontFamily: 'Inter', color: 'rgb(50, 50, 50)', fontWeight: 800, marginBottom: 5 }}>Summary</h4>
         <div style={{ display: 'flex', flexDirection: 'row', gap: 20 }}>
-          <div className="orangeBox">
+          <div className="orangeBox2">
             <p style={{ fontWeight: 700, color: 'rgb(60,60,60)' }}>TOTAL USERS</p>
             <p style={{ fontWeight: 700, fontSize: 48, color: 'rgb(50,50,50)', marginTop: -3 }}>{users.length}</p>
           </div>
-          <div className="orangeBox">
+          <div className="orangeBox2">
             <p style={{ fontWeight: 700, color: 'rgb(60,60,60)' }}>TOTAL REPORTS</p>
             <p style={{ fontWeight: 700, fontSize: 48, color: 'rgb(50,50,50)', marginTop: -3 }}>{generalUsersReports.length}</p>
           </div>
-          <div className="orangeBox">
+          <div className="orangeBox2">
             <p style={{ fontWeight: 700, color: 'rgb(60,60,60)' }}>REGISTERED LGUs</p>
             <p style={{ fontWeight: 700, fontSize: 48, color: 'rgb(50,50,50)', marginTop: -3 }}>{totalLGUs}</p>
           </div>

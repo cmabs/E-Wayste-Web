@@ -4,6 +4,7 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase-config";
 import Logo from "../images/E-Wayste-logo.png";
+import { auth } from "../firebase-config";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
@@ -58,10 +59,10 @@ export default function Register() {
 
       // Add user details to Firestore
       const newUser = {
-        userId,
         firstName,
         lastName,
         username,
+        password,
         email,
       };
       const docRef = await addDoc(collection(db, "usersAdmin"), newUser);
