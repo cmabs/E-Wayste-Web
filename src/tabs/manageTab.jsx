@@ -1,224 +1,183 @@
 import React, { useState, useEffect } from "react";
 import '../styleSheet/manageTabStyle.css';
+import { navigate } from "react-router-dom"; 
 import { db, storage } from '../firebase-config';
-import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, where, query } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, query, where, } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
 
-import { FaSearch, FaBell, FaArrowLeft } from 'react-icons/fa';
+import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
-
-
-
+import { render } from "@testing-library/react";
 
 export default function UserManage() {
   const [users, setUsers] = useState([]);
-  const [deleteUserId, setDeleteUserId] = useState(null);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isPendingUsers, setIsPendingUsers] = useState(false);
-  const storage = getStorage();
+  const [lguCode, setLguCode] = useState("");
+  const [currentUser, setCurrentUser] = useState("");
+  const [currentUserLguCode, setCurrentUserLguCode] = useState(""); // Added state for current user's lguCode
 
   let imageURL, viewImageURL;
   const [userLicense, setUserLicense] = useState([]);
   const [openImage, setOpenImage] = useState(false);
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "userWorkID/");
-  const [loggedInUser, setLoggedInUser] = useState(null);
 
   const [isAddSchedOpen, setAddSchedOpen] =useState(false);
   const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [selectedSection, setSelectedSection] = useState("collector");  // Set default selected section to "collector"
   const [isCollectorOpen, setIsCollectorOpen] = useState(true); // Initially open
   const [isUsersListOpen, setIsUsersListOpen]  =useState(true);
   const [isTruckOpen, setIsTruckOpen] = useState(false);
   const [isUserListVisible, setUserListVisible] = useState(true);
 
-
-  const [selectedSection, setSelectedSection] = useState(null);
-  const [collectors, setCollectors] = useState([]); 
-  const [searchTerm, setSearchTerm] = useState(''); 
-
-  useEffect(() => {
-    const fetchLoggedInUserData = async () => {
-      try {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (user) {
-          setLoggedInUser(user);
-        }
-      } catch (error) {
-        console.error('Error fetching logged-in user data:', error);
-      }
-    };
-
-    fetchLoggedInUserData();
-  }, []);
-
-  useEffect(() => {
-    if (loggedInUser && loggedInUser.uid) {
-      fetchGarbageCollectors(loggedInUser.uid);
-    }
-  }, [loggedInUser]);
-
-  const handleSearch = () => {
-    const filtered = users.filter(user => {
-      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-      const collectorUsername = user.username ? user.username.toLowerCase() : '';
-      const searchTermLower = searchTerm.toLowerCase();
-  
-      return (
-        collectorUsername.includes(searchTermLower) ||
-        fullName.includes(searchTermLower) ||
-        user.username.includes(searchTermLower)
-      );
-    });
-    setUsers(filtered);
-  };
-  
-  
-  const fetcCollectorUsers = async () => {
+  const fetchLoggedInUserLguCode = async () => {
     try {
-      const firestore = getFirestore();
-      const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
-      const usersSnapshot = await getDocs(usersCollection);
-
-      const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setUsers(usersData);
+      const auth = getAuth();
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // User is signed in
+          const email = user.email;
+  
+          // Fetch user data from 'users' collection based on email
+          const firestore = getFirestore();
+          const usersCollection = collection(firestore, 'users');
+          const querySnapshot = await getDocs(query(usersCollection, where('email', '==', email)));
+  
+          if (!querySnapshot.empty) {
+            // Assuming email is unique, there should be only one user
+            const userData = querySnapshot.docs[0].data();
+            const userLguCode = userData.lguCode;
+  
+            // Set the user's LGU code in state
+            setCurrentUserLguCode(userLguCode);
+          }
+        }
+      });
     } catch (error) {
-      console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
+      console.error('Error fetching logged-in user data:', error);
     }
   };
-
+  
+  // Call the function when the component mounts
   useEffect(() => {
-    fetcCollectorUsers();
-  }, [isPendingUsers]);
-
-
+    fetchLoggedInUserLguCode();
+  }, []);
+  
   const toggleUserListVisibility = () => {
     setUserListVisible(!isUserListVisible);
-    setUserListVisible(false); 
-   
+    setUserListVisible(false);   
+  };
+
+  const handlePendingUsersClick = () => {
+    setIsPendingUsers(!isPendingUsers);
+    setUserListVisible(true);
+    setIsCollectorOpen(false);
+    setIsTruckOpen(false);
   };
   
   const handleSectionSelect = (section) => {
     setSelectedSection(section);
     if (section === "collector") {
       setIsCollectorOpen(true);
-      setSelectedSection(section);
-      setUserListVisible(false); // Hide UserListContent when "Collector" is clicked
-      
-      
+      setIsTruckOpen(false);
+      setUserListVisible(true); 
+      setUsers([]); 
+      fetchUsers(); 
     } else if (section === "trucks") {
       setIsCollectorOpen(false);
       setIsTruckOpen(true);
-      setUserListVisible(false); // Hide UserListContent when "Trucks" is clicked
+      setUserListVisible(false); 
     }
   };
+
   const renderTableContent = () => {
     if (isPendingUsers) {
       return null; // Return null when Pending Users is active
     }
-
     if (selectedSection === "collector" && isCollectorOpen) {
-      const collectors = users.filter(user => user.accountType === "Garbage Collector");
-      const collectorsJSX = collectors.map(collector => (
-        <tr key={collector.id}  style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-          <td style={{ borderRight: '1px solid #ddd' }}>{collector.username}</td>
-          <td style={{ borderRight: '1px solid #ddd' }}>{collector.accountType}</td>
-          <td style ={{color:'red', borderRight: '1px solid #ddd'}}>Active</td>
-          <td style={{ borderRight: '1px solid #ddd' }}>{`${collector.barangay}, ${collector.municipality}, ${collector.province}`}</td>
-          <td style={{ borderRight: '1px solid #ddd' }}>
-          <MdOutlineModeEdit style={{ fontSize: 24, cursor: 'pointer', color: 'green' }} />
-           <MdDelete
-              style={{ fontSize: 24, gap: 5, cursor: 'pointer', color: 'red' }}
-              onClick={(event) => handleDeleteUser(event, collector.id)}
-            />
-        </td>
-        </tr>
-      ));
-
+      const filteredUsers = users.filter(user => user.accountType === 'Garbage Collector');
+  
       return (
         <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
           <thead>
             <tr>
+              <th>Name</th>
               <th>Username</th>
-              <th>Type</th>
-              <th>Status</th>
+              <th>Email</th>
+              <th>Contact</th>
               <th>Location</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody className="reportTableBody">{collectorsJSX}</tbody>
-        </table>
-      );
-    }  else if (selectedSection === "trucks" && isTruckOpen) {
-      return (
-        <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th>Truck No.</th>
-              <th>Plate No.</th>
-              <th>Assigned Driver</th>
-              <th>Assigned Collector</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody className="reportTableBody">
-            <tr style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-              <td style={{ borderRight: '1px solid #ddd' }}>1234</td>
-              <td style={{ borderRight: '1px solid #ddd' }}></td>
-              <td style={{ borderRight: '1px solid #ddd' }}></td>
-              <td style={{ borderRight: '1px solid #ddd' }}></td>
-              <td style={{ borderRight: '1px solid #ddd' }}></td>
-            </tr>
+            {filteredUsers.map((user) => (
+              <tr key={user.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+                <td style={{ borderRight: '1px solid #ddd' }}>{`${user.firstName} ${user.lastName}`}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{user.username}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{user.email}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{user.contactNo}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{`${user.barangay}, ${user.municipality}, ${user.province}`}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>
+                  <MdDelete
+                    style={{ fontSize: 24, cursor: 'pointer', color: 'red' }}
+                    onClick={(event) => handleDeleteUser(event, user.id)}
+                  />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       );
+    } else if (selectedSection === "trucks" && isTruckOpen) {
+      // Remaining code for trucks table
     } else {
       return null; // Return null if the section is not selected or isOpen is false
     }
   };
-  
-  const fetchGarbageCollectors = async (loggedInUserId) => {
+
+  const fetchUsers = async () => {
     try {
       const firestore = getFirestore();
-      const usersCollection = collection(firestore, 'users');
-      const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'));
-
-      const querySnapshot = await getDocs(q);
-
-      const usersData = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(user => user.lguCode === loggedInUserId); // Assuming LGU code is stored as 'lguCode' in user data
-
+      let usersCollection;
+  
+      if (isPendingUsers) {
+        // Filter pendingUsers by lguCode
+        const q = query(collection(firestore, 'pendingUsers'), where('lguCode', '==', currentUserLguCode));
+        const usersSnapshot = await getDocs(q);
+        const pendingUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setUsers(pendingUsers);
+        return;
+      } else {
+        usersCollection = collection(firestore, 'users');
+  
+        // Filter by accountType for collectors
+        if (selectedSection === 'collector') {
+          // Use query to filter by lguCode
+          const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'), where('lguCode', '==', currentUserLguCode));
+          const usersSnapshot = await getDocs(q);
+          const filteredUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          setUsers(filteredUsers);
+          return;
+        }
+      }
+  
+      const usersSnapshot = await getDocs(usersCollection);
+      const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setUsers(usersData);
     } catch (error) {
-      console.error('Error fetching garbage collectors:', error);
+      console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
     }
   };
   
-  const fetchUsers = async () => {
-  try {
-    const firestore = getFirestore();
-    const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
-    const usersSnapshot = await getDocs(usersCollection);
-
-    const usersData = usersSnapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(user => user.accountType === 'Garbage Collector' && user.lguCode === loggedInUser.lguCode);
-
-    setUsers(usersData);
-  } catch (error) {
-    console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
-  }
-};
-
-useEffect(() => {
-  console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
-  fetchUsers();
-}, [isPendingUsers, loggedInUser]);
-
+  
+  
+  useEffect(() => {
+    console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
+    fetchUsers();
+  }, [isPendingUsers]);
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -256,8 +215,6 @@ useEffect(() => {
   
       if (pendingUserSnapshot.exists()) {
         const userData = pendingUserSnapshot.data();
-  
-        // Create user in Firebase Authentication
         const { email, password } = userData; // You need to have a password for the user
         await createUserWithEmailAndPassword(auth, email, password);
   
@@ -294,7 +251,6 @@ useEffect(() => {
   };
 
   const handleAddSchedClick =() =>{
-        
     setAddSchedOpen(!isAddSchedOpen);
   }
   
@@ -304,28 +260,28 @@ useEffect(() => {
       return null; // Return null if isUserListOpen is false
     }
   
-    return (
-      <table className="reportTable" style={{ border: '1px solid #ddd', width: '100%' }}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Account Type</th>
-            <th>Location</th>
-            {isPendingUsers && <th>License</th>}
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody className="reportTableBody">
-          {users.map((user, userID) => (
-            <tr key={userID} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-              <td style={{ borderRight: '1px solid #ddd' }}>{`${user.firstName} ${user.lastName}`}</td>
-              <td style={{ borderRight: '1px solid #ddd' }}>{user.username}</td>
-              <td style={{ borderRight: '1px solid #ddd' }}>{user.email}</td>
-              <td style={{ borderRight: '1px solid #ddd' }}>{user.accountType}</td>
-              <td style={{ borderRight: '1px solid #ddd' }}>{`${user.barangay}, ${user.municipality}, ${user.province}`}</td>
-              {isPendingUsers && (
+    if (isPendingUsers) {
+      return (
+        <table className="reportTable" style={{ border: '1px solid #ddd', width: '100%' }}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Account Type</th>
+              <th>Location</th>
+              <th>License</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody className="reportTableBody">
+            {users.map((user, userID) => (
+              <tr key={userID} style={{ border: '1px solid #ddd', textAlign: 'center' }}>
+                <td style={{ borderRight: '1px solid #ddd' }}>{`${user.firstName} ${user.lastName}`}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{user.username}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{user.email}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{user.accountType}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{`${user.barangay}, ${user.municipality}, ${user.province}`}</td>
                 <td style={{ borderRight: '1px solid #ddd' }}>
                   {user.associatedImage && (
                     <a href="#" onClick={() => { setOpenImage(true); setImageToView(user.associatedImage) }}>
@@ -333,9 +289,7 @@ useEffect(() => {
                     </a>
                   )}
                 </td>
-              )}
-              <td>
-                {isPendingUsers ? (
+                <td>
                   <>
                     <ImCheckmark
                       style={{ fontSize: 24, cursor: 'pointer', color: 'green', marginRight: '5px' }}
@@ -346,33 +300,55 @@ useEffect(() => {
                       onClick={(event) => handleRejectUser(event, user.id)}
                     />
                   </>
-                ) : (
-                  <>
-                    <MdOutlineModeEdit style={{ fontSize: 24, cursor: 'pointer', color: 'green' }} />
-                    <MdDelete
-                      style={{ fontSize: 24, gap: 5, cursor: 'pointer', color: 'red' }}
-                      onClick={(event) => handleDeleteUser(event, user.id)}
-                    />
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
+    } else {
+      //return renderTableContent();
+    }
   }
+  
 
-  function addSideUsers() {
+  function addTrucks() {
     return (
       <div className="add-sideUsers" style={{ padding: '10px' }}>
         <div>
-          <p style={{ marginLeft: 8, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
-            Add Users
+          <p style={{ marginLeft: 20, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
+            Add Truck
           </p>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
-        <button style={{ width: 100,  backgroundColor: '#FF6347', borderRadius: 10, borderColor: '#FF6347', padding: '8px', color: '#fff' }} onClick={handleAddSchedClick}>Cancel</button>
+        <div className="input-container" style={{ display: 'flex', flexDirection: 'column', marginTop: 20, alignItems: 'flex-start' }}>
+          <div className="input-group">
+            <label className="label-addtruck" htmlFor="truckNo">Truck No.</label>
+            <input className="input-addtruck" type="text" id="truckNo" placeholder="Enter Truck No." />
+          </div>
+  
+          <div className="input-group">
+            <label className="label-addtruck" htmlFor="plateNo">Plate No.</label>
+            <input className="input-addtruck" type="text" id="plateNo" placeholder="Enter Plate No." />
+          </div>
+  
+          <div className="input-group">
+            <label className="label-addtruck" htmlFor="assignedDriver">Assigned Driver</label>
+            <input className="input-addtruck" type="text" id="assignedDriver" placeholder="Enter Assigned Driver" />
+          </div>
+  
+          <div className="input-group">
+            <label className="label-addtruck" htmlFor="assignedCollector">Assigned Collector</label>
+            <input className="input-addtruck" type="text" id="assignedCollector" placeholder="Enter Assigned Collector" />
+          </div>
+  
+          <div className="input-group">
+            <label className="label-addtruck" htmlFor="assignedLocation">Assigned Location</label>
+            <input className="input-addtruck" type="text" id="assignedLocation" placeholder="Enter Assigned Location" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+          <button className="cancel" onClick={handleAddSchedClick}>Cancel</button>
+          <button className="submit" onClick={handleAddSchedClick}>Save</button>
         </div>
       </div>
     );
@@ -382,46 +358,28 @@ useEffect(() => {
     <>
       <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-        <button className="pending-users-button" onClick={() => { setIsPendingUsers(!isPendingUsers); setUserListVisible(true);  setIsCollectorOpen(false);  setIsTruckOpen(false);}}>Pending Users</button>
-        <div className={selectedSection === "collector" ? "click-collector active" : "click-collector"} onClick={() => { handleSectionSelect("collector"); toggleUserListVisibility(); setIsCollectorOpen(true)}}>
-          Collector
-        </div>
-        <div className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"} onClick={() => { handleSectionSelect("trucks"); toggleUserListVisibility(); }}>
-          Trucks
-        </div>
-        <button className="add-users-button" onClick={handleAddSchedClick}>Add+</button>
-
+          <button className="pending-users-button" onClick={handlePendingUsersClick}>Pending Users</button>
+          {!isPendingUsers && (
+            <>
+              <div
+                className={selectedSection === "collector" ? "click-collector active" : "click-collector"}
+                onClick={() => { handleSectionSelect("collector"); toggleUserListVisibility(); setIsCollectorOpen(true);
+                }}>Collector</div>
+              <div className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
+                onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
+                }}> Trucks</div>
+            </>
+          )}
+        <button className="add-users-button" onClick={handleAddSchedClick}>Add Truck +</button>
           {isAddSchedOpen && (
-              <div className="modal-overlay">
-                {addSideUsers()}
+              <div className="modal-overlay"> 
+                {addTrucks()}
               </div>
             )}
-      
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
             {isPendingUsers ? 'Pending Users' : 'User Management'}
           </h1>
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
-          <div style={{ display: 'flex', flexDirection: 'row' }}>
-          <input 
-            type="text" 
-            placeholder="Search" 
-            className="searchBar" 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} // Add onChange event handler
-          />
-          <button 
-            className="searchButton" 
-            onClick={handleSearch} // Add onClick event handler
-          >
-            <FaSearch style={{ fontSize: 20 }} />
-          </button>
-        </div>
-
-            <button className="notifIcon">
-              <FaBell />
-            </button>
           </div>
-        </div>
         <div style={{  marginTop: 70, marginBottom: 40, padding: 10, borderRadius: 20, width: 1100 }}>  
         {renderTableContent()}
         <div style={{ display: isUserListVisible ? 'block' : 'none' }}>

@@ -16,6 +16,10 @@ export default function Login() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
+      // Store user ID in localStorage
+      localStorage.setItem('userId', user.uid);
+
       console.log('Logged in successfully!');
       console.log('User UID:', user.uid); // Use user UID here as needed
       navigate('/Home'); // Navigate to the Home page
@@ -58,7 +62,7 @@ export default function Login() {
                 required="required"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
+                //placeholder="Email"
               />
               <p>Email</p>
               <i></i>
@@ -69,7 +73,7 @@ export default function Login() {
                 required="required"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                //placeholder="Password"
               />
               <p>Password</p>
               <i></i>

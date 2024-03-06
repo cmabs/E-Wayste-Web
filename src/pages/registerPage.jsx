@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 import { db } from "../firebase-config";
 import Logo from "../images/E-Wayste-logo.png";
 
@@ -56,15 +56,16 @@ export default function Register() {
       // Get the newly created user's UID
       const userId = userCredential.user.uid;
 
-      // Add user details to Firestore
+      // Add user details to Firestore with the same UID as authentication
       const newUser = {
-        userId,
         firstName,
         lastName,
         username,
         email,
       };
-      const docRef = await addDoc(collection(db, "usersAdmin"), newUser);
+      
+      const userDocRef = doc(db, "usersAdmin", userId);
+      await setDoc(userDocRef, newUser);
 
       console.log("User account created successfully! User ID:", userId);
       alert("User account created successfully!");
@@ -80,6 +81,7 @@ export default function Register() {
       alert("Failed to create user account. Please try again.");
     }
   };
+  
   return ( 
     <> 
       <div className="registerPage"> 

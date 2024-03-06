@@ -1,242 +1,305 @@
 .userManageB {
-    display: flex;
-    overflow: hidden;
-    margin-bottom: 6px;
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 6px;
 }
+
 .userManageB button {
-    font-family: Inter;
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: 40px;
-    border: none;
-    padding: 0;
-    background-color: white;
-    z-index: 10;
-    align-items: center;
+  font-family: Inter;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 40px;
+  border: none;
+  padding: 0;
+  background-color: white;
+  z-index: 10;
+  align-items: center;
 }
+
 .userManageB button:hover {
-    background-color: rgb(222, 241, 191);
-    transition: 0.2s;
+  background-color: rgb(222, 241, 191);
+  transition: 0.2s;
 }
+
 button.editB {
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
-    background: transparent;
-    color: rgb(180, 180, 180);
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  background: transparent;
+  color: rgb(180, 180, 180);
 }
+
 .editB:hover {
-    color: rgb(0,123,0);
+  color: rgb(0,123,0);
 }
+
 .editB:active {
-    color: rgb(45, 180, 45);
-    transition: 0.1s;
+  color: rgb(45, 180, 45);
+  transition: 0.1s;
 }
-
-
 
 .checkInput[type="checkbox"]:before {
-    position: relative;
-    display: block;
-    width: 16px;
-    height: 16px;
-    border: 1px solid #666666;
-    border-radius: 3px;
-    content: "";
-    background: transparent;
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #666666;
+  border-radius: 3px;
+  content: "";
+  background: transparent;
 }
+
 .checkInput[type="checkbox"]:after {
-    position: absolute;
-    display: block;
-    transform: translateY(-105%) translateX(6%);
-    width: 16px;
-    height: 16px;
-    content: "";
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 80%;
+  position: absolute;
+  display: block;
+  transform: translateY(-105%) translateX(6%);
+  width: 16px;
+  height: 16px;
+  content: "";
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 80%;
 }
+
 .checkInput[type="checkbox"]:checked:after {
-    background-color: rgb(0,123,0);
+  background-color: rgb(0,123,0);
 }
+
 .checkmark {
-    position: absolute;
-    transform: translateY(38%) translateX(-140%);
-    pointer-events: none;
-    color: white;
+  position: absolute;
+  transform: translateY(38%) translateX(-140%);
+  pointer-events: none;
+  color: white;
 }
+
 .checkmark2 {
-    position: absolute;
-    transform: translateY(0%) translateX(0%);
-    pointer-events: none;
-    color: white;
+  position: absolute;
+  transform: translateY(0%) translateX(0%);
+  pointer-events: none;
+  color: white;
 }
 
 .userList {
-    height: 400px;
-    width: 1020px;
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 0.5px;
-    border-color: rgb(0, 123, 0);
-    margin-bottom: 30px;
-    overflow-y: auto;
+  height: 400px;
+  width: 1020px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 0.5px;
+  border-color: rgb(0, 123, 0);
+  margin-bottom: 30px;
+  overflow-y: auto;
 }
+
 .userList::-webkit-scrollbar {
-    width: 5px;
+  width: 5px;
 }
+
 .userList:hover::-webkit-scrollbar-thumb {
-    background-color: rgb(91, 209, 91);
-    border-top-right-radius: 100px;
-    border-bottom-right-radius: 100px;
+  background-color: rgb(91, 209, 91);
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
 }
+
 .userList::-webkit-scrollbar-thumb:active {
-    background-color: rgb(74, 187, 74);
+  background-color: rgb(74, 187, 74);
 }
-
-
 
 .userListB {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+
 .userListB button {
-    font-family: Inter;
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: 50px;
-    border: none;
-    padding: 0;
-    background-color: transparent;
-    z-index: 10;
-    align-items: center;
+  font-family: Inter;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 50px;
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  z-index: 10;
+  align-items: center;
 }
+
 .userListB button:hover {
-    background-color: rgb(222, 241, 191);
-    transition: 0.2s;
+  background-color: rgb(222, 241, 191);
+  transition: 0.2s;
 }
 
 /* Add this CSS to your existing stylesheet or create a new one */
-
 .delete-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    text-align: center;
-  }
-  
-  .delete-modal p {
-    margin-bottom: 20px;
-    font-size: 16px;
-  }
-  
-  .delete-modal button {
-    padding: 10px 20px;
-    margin: 0 10px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    border-radius: 4px;
-  }
-  
-  .delete-modal button:hover {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  .pending-users-button {
-    position: absolute;
-    top: 130px;
-    left: 1200px;
-    background-color: green;
-    color: white;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: none;
-    
-    cursor: pointer;
-  }
-  .add-users-button {
-    position: absolute;
-    top: 130px;
-    left: 1350px;
-    background-color: #F2BE2D;
-    color: white;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: none;
-    
-    cursor: pointer;
-  }
-  
-  .pending-users-button:hover {
-    background-color: darkgreen;
-    transition: background-color 0.3s ease-in-out;
-    transform: scale(1.05);
-  }
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  text-align: center;
+}
 
-  .click-collector{
-    position: absolute;
-    top: 130px;
-    left: 350px;
-    color: black;
-    font-weight: 700;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: none;
+.delete-modal p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
 
-    
-    cursor: pointer;
-  }
-  .click-trucks{
-    position: absolute;
-    top: 130px;
-    left: 450px;
-    color: black;
-    font-weight: 700;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: none;
-    
-    cursor: pointer;
-  }
+.delete-modal button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+}
 
-  /* new css */
-.reportTable{
-    background: #F6F6F6;
-  }
-  .reportTableBody {
-    background: #F4FDF0;
-  }
-  
-  .tableRow:hover {
-    background: #BDE47C;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
-    transform: scale(1.05);
-  }
-  .add-sideUsers{
+.delete-modal button:hover {
+  background-color: #f44336;
+  color: white;
+}
 
-    position: absolute;
-    width: 800px;
-    height: 599px;
-    background: #F4FDF0;
-    border-radius: 20px;
-    
-    }
-    .active {
-      text-decoration: underline;
-      color:green;
+.pending-users-button {
+  position: absolute;
+  top: 130px;
+  left: 1180px;
+  background-color: green;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
 
-    }
+.add-users-button {
+  position: absolute;
+  top: 130px;
+  left: 1330px;
+  background-color: #F2BE2D;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.pending-users-button:hover {
+  background-color: darkgreen;
+  transition: background-color 0.3s ease-in-out;
+  transform: scale(1.05);
+}
+
+.click-collector {
+  position: absolute;
+  top: 130px;
+  left: 350px;
+  color: black;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.click-trucks {
+  position: absolute;
+  top: 130px;
+  left: 450px;
+  color: black;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.reportTable {
+  background: #F6F6F6;
+}
+
+.reportTableBody {
+  background: #F4FDF0;
+}
+
+.tableRow:hover {
+  background: #BDE47C;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+  transform: scale(1.05);
+}
+
+.add-sideUsers {
+  position: absolute;
+  width: 600px;
+  height: 550px;
+  background: #F4FDF0;
+  border-radius: 20px;
+}
+
+.active {
+  text-decoration: underline;
+  color: green;
+}
+
+label {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #333; /* Set the desired color */
+  margin-bottom: 5px; /* Adjust as needed */
+  margin-left: 20px;
+}
+
+.input-addtruck {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  padding: 8px; /* Adjust padding as needed */
+  border: 1px solid #ccc; /* Set the desired border color */
+  border-radius: 4px; /* Adjust border-radius as needed */
+  margin-bottom: 15px; /* Adjust as needed */
+  margin-left: 20px;
+  width: 535px;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  align-items: flex-start;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style for the Cancel button */
+button.cancel {
+  margin-left: -10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  padding: 8px 15px; /* Adjust padding as needed */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+  background-color: #FF6347;
+  border-color: #FF6347;
+}
+
+/* Style for the Submit button */
+button.submit {
+  margin-left: 10px;
+  background-color: #008000;
+  border-color: #008000;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  padding: 8px 15px; /* Adjust padding as needed */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+}
