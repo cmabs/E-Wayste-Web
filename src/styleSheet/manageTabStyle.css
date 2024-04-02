@@ -236,7 +236,15 @@ button.editB {
 .add-sideUsers {
   position: absolute;
   width: 600px;
-  height: 550px;
+  height: 500px;
+  background: #F4FDF0;
+  border-radius: 20px;
+}
+
+.edit-truckModal {
+  position: absolute;
+  width: 600px;
+  height: 430px;
   background: #F4FDF0;
   border-radius: 20px;
 }

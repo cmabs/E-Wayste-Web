@@ -6,8 +6,8 @@ import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, quer
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
 import AddTruckModal from "../Modals/AddTruck";
+import EditTruckModal from '../Modals/EditTruck';
 
-import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
@@ -18,7 +18,7 @@ export default function UserManage() {
   const [isPendingUsers, setIsPendingUsers] = useState(false);
   const [lguCode, setLguCode] = useState("");
   const [currentUser, setCurrentUser] = useState("");
-  const [currentUserLguCode, setCurrentUserLguCode] = useState(""); // Added state for current user's lguCode
+  const [currentUserLguCode, setCurrentUserLguCode] = useState(""); 
 
   let imageURL, viewImageURL;
   const [userLicense, setUserLicense] = useState([]);
@@ -26,10 +26,11 @@ export default function UserManage() {
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "userWorkID/");
 
-  const [isAddSchedOpen, setAddSchedOpen] =useState(false);
-  const [isDetailsOpen, setDetailsOpen] = useState(false);
-  const [selectedSection, setSelectedSection] = useState("collector");  // Set default selected section to "collector"
-  const [isCollectorOpen, setIsCollectorOpen] = useState(true); // Initially open
+  const [isEditTruckOpen, setIsEditTruckOpen] = useState(false);
+  const [selectedTruck, setSelectedTruck] = useState(null);
+  const [isAddTruckOpen, setAddTruckOpen] =useState(false);
+  const [selectedSection, setSelectedSection] = useState("collector");  
+  const [isCollectorOpen, setIsCollectorOpen] = useState(true); 
   const [isUsersListOpen, setIsUsersListOpen]  =useState(true);
   const [isTruckOpen, setIsTruckOpen] = useState(false);
   const [isUserListVisible, setUserListVisible] = useState(true);
@@ -92,7 +93,7 @@ export default function UserManage() {
   }, [selectedSection, isTruckOpen]);
 
   const handleCloseModal = () => {
-    setAddSchedOpen(false);
+    setAddTruckOpen(false);
   };
   
   const toggleUserListVisibility = () => {
@@ -122,10 +123,12 @@ export default function UserManage() {
     }
   };
 
-  const handleEditTruck = (truckId) => {
-    // Implement logic to handle editing the truck with the given ID
+  const handleEditTruck = (truck) => {
+    setSelectedTruck(truck);
+    setIsEditTruckOpen(true);
+    console.log('Truck ID to be edited:', truck.id); // Console log the truck ID
   };
-  
+
   const handleDeleteTruck = async (truckId) => {
     try {
       const firestore = getFirestore();
@@ -194,8 +197,6 @@ export default function UserManage() {
           </thead>
           <tbody className="reportTableBody">
             {trucks.map((truck, index) => {
-              const collectorNames = getCollectorNames(truck.members);
-              console.log("Collector Names for Truck", index + 1, ":", collectorNames);
               return (
                 <tr key={truck.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
                   <td style={{ borderRight: '1px solid #ddd' }}>{index + 1}</td>
@@ -205,7 +206,7 @@ export default function UserManage() {
                   <td style={{ borderRight: '1px solid #ddd' }}>
                     <MdOutlineModeEdit
                       style={{ fontSize: 22, cursor: 'pointer', color: 'green', marginRight: '10px' }}
-                      onClick={() => handleEditTruck(truck.id)} // Implement handleEditTruck function
+                      onClick={() => handleEditTruck(truck)}
                     />
                     <MdDelete
                       style={{ fontSize: 22, cursor: 'pointer', color: 'red' }}
@@ -344,14 +345,14 @@ export default function UserManage() {
     }
   };
 
-  const handleAddSchedClick =() =>{
-    setAddSchedOpen(!isAddSchedOpen);
+  const handleAddTruckClick =() =>{
+    setAddTruckOpen(!isAddTruckOpen);
   }
   
 
   function UserListContent() {
     if (!isUsersListOpen) {
-      return null; // Return null if isUserListOpen is false
+      return null; 
     }
   
     if (isPendingUsers) {
@@ -421,12 +422,17 @@ export default function UserManage() {
                 }}> Trucks</div>
             </>
           )}
-        <button className="add-users-button" onClick={handleAddSchedClick}>Add Truck +</button>
-          {isAddSchedOpen && (
+        <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
+          {isAddTruckOpen && (
               <div className="modal-overlay"> 
-                  <AddTruckModal isOpen={isAddSchedOpen} handleClose={handleCloseModal} />
+                  <AddTruckModal isOpen={isAddTruckOpen} handleClose={handleCloseModal} />
               </div>
             )}
+            {isEditTruckOpen && (
+            <div className="modal-overlay"> 
+              <EditTruckModal isOpen={isEditTruckOpen} handleClose={() => setIsEditTruckOpen(false)} selectedTruck={selectedTruck} />
+            </div>
+          )}
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
             {isPendingUsers ? 'Pending Users' : 'User Management'}
           </h1>

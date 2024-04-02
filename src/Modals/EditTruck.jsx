@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs, addDoc, query, where, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, doc, addDoc, query, where, Timestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import moment from 'moment';
 
-export default function AddTruckModal({ isOpen, handleClose }) {
-  const [truckCount, setTruckCount] = useState(0);
+export default function EditTruckModal({ isOpen, handleClose, selectedTruck }) {
+  const [truckId, setTruckId] = useState(null);
   const [users, setUsers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState('');
   const [selectedCollectors, setSelectedCollectors] = useState([]);
@@ -14,10 +14,37 @@ export default function AddTruckModal({ isOpen, handleClose }) {
   const [plateNo, setPlateNo] = useState("");
 
   useEffect(() => {
-    fetchTruckCount();
     fetchGarbageCollectors();
     fetchLoggedInUserLguCode();
   }, []);
+
+  useEffect(() => {
+    if (isOpen && selectedTruck) {
+      setTruckId(selectedTruck.id);
+    }
+  }, [isOpen, selectedTruck]);
+
+  useEffect(() => {
+    const fetchTruckData = async () => {
+      try {
+        const firestore = getFirestore();
+        const truckDoc = await getDoc(doc(firestore, 'trucks', truckId));
+        if (truckDoc.exists()) {
+          const truckData = truckDoc.data();
+          // Extract and set the plateNo, driver, and selected collectors from the truck data
+          setPlateNo(truckData.plateNo);
+          setSelectedDriver(truckData.driverID);
+          setSelectedCollectors(truckData.members.collector.map(collector => collector.id));
+        }
+      } catch (error) {
+        console.error('Error fetching truck data:', error);
+      }
+    };
+  
+    if (truckId) {
+      fetchTruckData();
+    }
+  }, [truckId]);
 
   const fetchLoggedInUserLguCode = async () => {
     try {
@@ -35,9 +62,9 @@ export default function AddTruckModal({ isOpen, handleClose }) {
             const userID = querySnapshot.docs[0].id;
 
             setCurrentUserLguCode(userLguCode);
-            console.log('Logged-in user LGU code:', userLguCode);
+            /*console.log('Logged-in user LGU code:', userLguCode);
             setCurrentUserLguID(userID);
-            console.log('Logged-in user ID:', userID);
+            console.log('Logged-in user ID:', userID);*/
           }
         }
       });
@@ -46,17 +73,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
     }
   };
 
-  const fetchTruckCount = async () => {
-    try {
-      const firestore = getFirestore();
-      const trucksCollection = collection(firestore, 'trucks');
-      const trucksSnapshot = await getDocs(trucksCollection);
-      const count = trucksSnapshot.docs.length;
-      setTruckCount(count);
-    } catch (error) {
-      console.error('Error fetching truck count:', error);
-    }
-  };
 
   const fetchGarbageCollectors = async () => {
     try {
@@ -74,12 +90,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
 
   const handleSaveTruck = async () => {
     try {
-      // Check if any required fields are missing
-      if (!plateNo || !selectedDriver || selectedCollectors.length === 0) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-  
       const firestore = getFirestore();
       const trucksCollection = collection(firestore, 'trucks');
       const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD HH:mm:ss');
@@ -92,7 +102,7 @@ export default function AddTruckModal({ isOpen, handleClose }) {
         lguID: currentUserLguID,
         driverID: selectedDriver,
         members: {
-          collector: collectorIDs 
+          collector: collectorIDs // Store collector IDs in the members field
         }
       };
       await addDoc(trucksCollection, truckData);
@@ -107,17 +117,9 @@ export default function AddTruckModal({ isOpen, handleClose }) {
     }
   };
   
-
+  
   const handleDriverChange = (event) => {
-    const selectedDriverId = event.target.value;
-  
-    // Check if the selected driver is also selected as a collector
-    if (selectedCollectors.includes(selectedDriverId)) {
-      alert('The selected driver cannot be chosen as a collector.');
-      return;
-    }
-  
-    setSelectedDriver(selectedDriverId);
+    setSelectedDriver(event.target.value);
   };
 
   const handleCreateCollectorClick = () => {
@@ -137,32 +139,19 @@ export default function AddTruckModal({ isOpen, handleClose }) {
   const handleCollectorChange = (event) => {
     const selectedCollectorId = event.target.value;
 
-    if (!selectedDriver) {
-      alert('Please select a driver first.');
-      return;
-    }
-    if ((selectedCollectorId === selectedDriver) || (selectedDriver && selectedDriver === selectedCollectorId)) {
-      alert('The selected driver cannot be chosen as a collector.');
-      return;
-    }
     if (!selectedCollectors.find(collector => collector === selectedCollectorId)) {
       setSelectedCollector(selectedCollectorId);
     }
   };
   
   return (
-    <div className="add-sideUsers" style={{ padding: '10px' }}>
+    <div className="edit-truckModal" style={{ padding: '10px'}}>
       <div>
         <p style={{ marginLeft: 20, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
-          Add Truck
+          Edit Truck
         </p>
       </div>
       <div className="input-container" style={{ display: 'flex', flexDirection: 'column', marginTop: 20, alignItems: 'flex-start' }}>
-        <div className="input-group">
-          <label className="label-addtruck" htmlFor="truckNo">Truck No.</label>
-          <input className="input-addtruck" type="text" id="truckNo" value={`${truckCount + 1}`} readOnly />
-        </div>
-
         <div className="input-group">
           <label className="label-addtruck" htmlFor="plateNo">Plate No.</label>
           <input className="input-addtruck" type="text" id="plateNo" placeholder="Enter Plate No." value={plateNo} onChange={(e) => setPlateNo(e.target.value)} />
@@ -194,7 +183,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
             <button className="add-collector-btn" onClick={handleCreateCollectorClick} disabled={users.filter(user => user.lguCode === currentUserLguCode && user.id !== selectedDriver && !selectedCollectors.includes(user.id)).length === 0}>+</button>
           </div>
         </div>
-
         <div className="selected-collectors" style={{ display: 'flex', flexWrap: 'wrap', marginRight: '-50px'}}>
           {selectedCollectors.map((collector, index) => (
             <div key={index} className="selected-collector" style={{ marginRight: '10px', marginBottom: '10px' }}>
