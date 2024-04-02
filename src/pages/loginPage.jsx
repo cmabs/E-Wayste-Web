@@ -16,8 +16,7 @@ export default function Login() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      // Store user ID in localStorage
+    
       localStorage.setItem('userId', user.uid);
 
       console.log('Logged in successfully!');

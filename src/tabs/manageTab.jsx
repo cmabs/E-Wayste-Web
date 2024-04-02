@@ -5,6 +5,7 @@ import { db, storage } from '../firebase-config';
 import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, query, where, } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
+import AddTruckModal from "../Modals/AddTruck";
 
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
@@ -32,6 +33,7 @@ export default function UserManage() {
   const [isUsersListOpen, setIsUsersListOpen]  =useState(true);
   const [isTruckOpen, setIsTruckOpen] = useState(false);
   const [isUserListVisible, setUserListVisible] = useState(true);
+  const [trucks, setTrucks] = useState([]);
 
   const fetchLoggedInUserLguCode = async () => {
     try {
@@ -65,6 +67,33 @@ export default function UserManage() {
   useEffect(() => {
     fetchLoggedInUserLguCode();
   }, []);
+
+  const fetchTrucks = async () => {
+    try {
+      const firestore = getFirestore();
+      const trucksCollection = collection(firestore, 'trucks');
+      const trucksSnapshot = await getDocs(trucksCollection);
+      const trucksData = trucksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+      // Sort the trucks based on the dateTime field in descending order
+      const sortedTrucks = trucksData.sort((a, b) => b.dateTime - a.dateTime);
+      
+      setTrucks(sortedTrucks);
+    } catch (error) {
+      console.error('Error fetching trucks:', error);
+    }
+  };
+  
+  // Call fetchTrucks function when component mounts
+  useEffect(() => {
+    if (selectedSection === 'trucks' && isTruckOpen) {
+      fetchTrucks();
+    }
+  }, [selectedSection, isTruckOpen]);
+
+  const handleCloseModal = () => {
+    setAddSchedOpen(false);
+  };
   
   const toggleUserListVisibility = () => {
     setUserListVisible(!isUserListVisible);
@@ -92,6 +121,24 @@ export default function UserManage() {
       setUserListVisible(false); 
     }
   };
+
+  const handleEditTruck = (truckId) => {
+    // Implement logic to handle editing the truck with the given ID
+  };
+  
+  const handleDeleteTruck = async (truckId) => {
+    try {
+      const firestore = getFirestore();
+      const truckRef = doc(firestore, 'trucks', truckId);
+      await deleteDoc(truckRef);
+      console.log('Truck deleted successfully!');
+      fetchTrucks(); // Optionally, you may fetch trucks again to update the UI
+    } catch (error) {
+      console.error('Error deleting truck:', error);
+    }
+  };
+  
+  
 
   const renderTableContent = () => {
     if (isPendingUsers) {
@@ -132,19 +179,68 @@ export default function UserManage() {
         </table>
       );
     } else if (selectedSection === "trucks" && isTruckOpen) {
-      // Remaining code for trucks table
-    } else {
-      return null; // Return null if the section is not selected or isOpen is false
+      //const sortedTrucks = trucks.sort((a, b) => b.dateTime - a.dateTime);
+
+      return (
+        <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
+          <thead>
+            <tr>
+              <th>Truck No.</th>
+              <th>Plate No.</th>
+              <th>Driver Name</th>
+              <th>Collector/s</th> 
+              <th>Action</th> 
+            </tr>
+          </thead>
+          <tbody className="reportTableBody">
+            {trucks.map((truck, index) => {
+              const collectorNames = getCollectorNames(truck.members);
+              console.log("Collector Names for Truck", index + 1, ":", collectorNames);
+              return (
+                <tr key={truck.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+                  <td style={{ borderRight: '1px solid #ddd' }}>{index + 1}</td>
+                  <td style={{ borderRight: '1px solid #ddd' }}>{truck.plateNo}</td>
+                  <td style={{ borderRight: '1px solid #ddd' }}>{getDriverName(truck.driverID)}</td>
+                  <td style={{ borderRight: '1px solid #ddd' }}>{getCollectorNames(truck.members)}</td>
+                  <td style={{ borderRight: '1px solid #ddd' }}>
+                    <MdOutlineModeEdit
+                      style={{ fontSize: 22, cursor: 'pointer', color: 'green', marginRight: '10px' }}
+                      onClick={() => handleEditTruck(truck.id)} // Implement handleEditTruck function
+                    />
+                    <MdDelete
+                      style={{ fontSize: 22, cursor: 'pointer', color: 'red' }}
+                      onClick={() => handleDeleteTruck(truck.id)} // Implement handleDeleteTruck function
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      );
     }
+  }
+
+  const getDriverName = (driverID) => {
+    const driver = users.find(user => user.id === driverID);
+    return driver ? `${driver.firstName} ${driver.lastName}` : '';
   };
 
+  const getCollectorNames = (members) => {
+    if (!members || !Array.isArray(members.collector)) return ''; // Return empty string if members or members.collector is not defined or not an array
+    const collectorNames = members.collector.map(collector => {
+      const foundUser = users.find(user => user.id === collector.id);
+      return foundUser ? `${foundUser.firstName} ${foundUser.lastName}` : '';
+    });
+    return collectorNames.join(', ');
+  };
+  
   const fetchUsers = async () => {
     try {
       const firestore = getFirestore();
       let usersCollection;
   
       if (isPendingUsers) {
-        // Filter pendingUsers by lguCode
         const q = query(collection(firestore, 'pendingUsers'), where('lguCode', '==', currentUserLguCode));
         const usersSnapshot = await getDocs(q);
         const pendingUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -153,9 +249,7 @@ export default function UserManage() {
       } else {
         usersCollection = collection(firestore, 'users');
   
-        // Filter by accountType for collectors
         if (selectedSection === 'collector') {
-          // Use query to filter by lguCode
           const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'), where('lguCode', '==', currentUserLguCode));
           const usersSnapshot = await getDocs(q);
           const filteredUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -307,53 +401,10 @@ export default function UserManage() {
         </table>
       );
     } else {
-      //return renderTableContent();
+      //return renderTableContent();  
     }
   }
   
-
-  function addTrucks() {
-    return (
-      <div className="add-sideUsers" style={{ padding: '10px' }}>
-        <div>
-          <p style={{ marginLeft: 20, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
-            Add Truck
-          </p>
-        </div>
-        <div className="input-container" style={{ display: 'flex', flexDirection: 'column', marginTop: 20, alignItems: 'flex-start' }}>
-          <div className="input-group">
-            <label className="label-addtruck" htmlFor="truckNo">Truck No.</label>
-            <input className="input-addtruck" type="text" id="truckNo" placeholder="Enter Truck No." />
-          </div>
-  
-          <div className="input-group">
-            <label className="label-addtruck" htmlFor="plateNo">Plate No.</label>
-            <input className="input-addtruck" type="text" id="plateNo" placeholder="Enter Plate No." />
-          </div>
-  
-          <div className="input-group">
-            <label className="label-addtruck" htmlFor="assignedDriver">Assigned Driver</label>
-            <input className="input-addtruck" type="text" id="assignedDriver" placeholder="Enter Assigned Driver" />
-          </div>
-  
-          <div className="input-group">
-            <label className="label-addtruck" htmlFor="assignedCollector">Assigned Collector</label>
-            <input className="input-addtruck" type="text" id="assignedCollector" placeholder="Enter Assigned Collector" />
-          </div>
-  
-          <div className="input-group">
-            <label className="label-addtruck" htmlFor="assignedLocation">Assigned Location</label>
-            <input className="input-addtruck" type="text" id="assignedLocation" placeholder="Enter Assigned Location" />
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-          <button className="cancel" onClick={handleAddSchedClick}>Cancel</button>
-          <button className="submit" onClick={handleAddSchedClick}>Save</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
@@ -373,7 +424,7 @@ export default function UserManage() {
         <button className="add-users-button" onClick={handleAddSchedClick}>Add Truck +</button>
           {isAddSchedOpen && (
               <div className="modal-overlay"> 
-                {addTrucks()}
+                  <AddTruckModal isOpen={isAddSchedOpen} handleClose={handleCloseModal} />
               </div>
             )}
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>

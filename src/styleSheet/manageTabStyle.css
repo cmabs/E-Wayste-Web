@@ -303,3 +303,30 @@ button.submit {
   cursor: pointer;
   color: #fff;
 }
+
+.add-collector-btn {
+  background-color: orange;
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: 300px;
+  margin-top: -15px;
+  border-radius: 5px;
+  padding: 7px 15px;
+  cursor: pointer;
+}
+
+.add-collector-btn:hover {
+  background-color: darkorange;
+}
+
+.delete-col-btn {
+  background-color: green;
+  color: white;
+  border: none;
+  border-radius: 2px;
+  padding: 5px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
