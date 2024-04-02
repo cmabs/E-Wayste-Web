@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs, getDoc, doc, addDoc, query, where, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, doc, addDoc, query, where, setDoc} from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import moment from 'moment';
 
@@ -90,8 +90,13 @@ export default function EditTruckModal({ isOpen, handleClose, selectedTruck }) {
 
   const handleSaveTruck = async () => {
     try {
+      if (!plateNo || !selectedDriver || selectedCollectors.length === 0) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+  
       const firestore = getFirestore();
-      const trucksCollection = collection(firestore, 'trucks');
+      const truckRef = doc(firestore, 'trucks', truckId);
       const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD HH:mm:ss');
       
       const collectorIDs = selectedCollectors.map(collector => ({ id: collector }));
@@ -105,7 +110,7 @@ export default function EditTruckModal({ isOpen, handleClose, selectedTruck }) {
           collector: collectorIDs // Store collector IDs in the members field
         }
       };
-      await addDoc(trucksCollection, truckData);
+      await setDoc(truckRef, truckData); // Update existing truck document
       console.log('Truck saved successfully!');
       
       setPlateNo(""); 
@@ -119,7 +124,14 @@ export default function EditTruckModal({ isOpen, handleClose, selectedTruck }) {
   
   
   const handleDriverChange = (event) => {
-    setSelectedDriver(event.target.value);
+    const selectedDriverId = event.target.value;
+  
+    if (selectedCollectors.includes(selectedDriverId)) {
+      alert('The selected driver cannot be chosen as a collector.');
+      return;
+    }
+  
+    setSelectedDriver(selectedDriverId);
   };
 
   const handleCreateCollectorClick = () => {
@@ -139,10 +151,17 @@ export default function EditTruckModal({ isOpen, handleClose, selectedTruck }) {
   const handleCollectorChange = (event) => {
     const selectedCollectorId = event.target.value;
 
+    if (selectedCollectorId === selectedDriver) {
+      alert('Driver cannot be chosen as a collector.');
+      return;
+    }
     if (!selectedCollectors.find(collector => collector === selectedCollectorId)) {
       setSelectedCollector(selectedCollectorId);
+    } else {
+      alert('Collector already selected.');
     }
   };
+  
   
   return (
     <div className="edit-truckModal" style={{ padding: '10px'}}>
