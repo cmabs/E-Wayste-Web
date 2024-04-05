@@ -140,7 +140,7 @@
     line-height: 61px;
     color: #000000;
     margin-top: 5px;
-    padding-left: 75px;   
+    padding-left: 120px;   
     justify-content: center;
     align-items: center;
 
@@ -240,7 +240,7 @@
     position: absolute;
     width: 94px;
     height: 61px;
-    left: 970px;
+    left: 985px;
     top: 190px;
     font-family: 'Inter';
     font-style: normal;
@@ -400,6 +400,6 @@
 }
 
 .tableRow:hover {
-  background: #bde878;
+  background: #d7f6a6;
   cursor: pointer;
 }
