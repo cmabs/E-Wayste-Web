@@ -16,7 +16,6 @@ export default function Report() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortDirection, setSortDirection] = useState('desc'); 
   const [originalUserReports, setOriginalUserReports] = useState([]);  
-  const [userMunicipality, setUserMunicipality] = useState('');
 
   const [collectedCount, setCollectedCount] = useState(0);
   const [uncollectedCount, setUncollectedCount] = useState(0);
@@ -93,7 +92,6 @@ export default function Report() {
   useEffect(() => {
     const fetchUserReports = async () => {
       try {
-        // Fetch the municipality of the current logged-in user
         const auth = getAuth();
         const user = await new Promise((resolve, reject) => {
           onAuthStateChanged(auth, user => {
@@ -147,6 +145,7 @@ export default function Report() {
     fetchUserReports();
   }, []);
   
+  
   const formatDateTime = (dateTime) => {
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateTime).toLocaleDateString(undefined, options);
@@ -190,23 +189,14 @@ export default function Report() {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
-  function Summary({ userMunicipality }) {
-    const filteredUserReports = userReports.filter(report => report.municipality === userMunicipality);
-    const filteredCollectedReports = filteredUserReports.filter(report => report.status === 'collected');
-    const filteredUncollectedReports = filteredUserReports.filter(report => report.status === 'uncollected');
-    const filteredReportsToday = filteredUserReports.filter(report => {
-      const currentDate = new Date().toISOString().split('T')[0];
-      return report.dateTime >= currentDate;
-    });
-    
-    const totalReports = filteredUserReports.length;
-    const collectedCount = filteredCollectedReports.length;
-    const uncollectedCount = filteredUncollectedReports.length;
-    const reportsToday = filteredReportsToday.length;
+function Summary() {
+  const currentDate = new Date().toISOString().split('T')[0];
+  
+  const totalReports = filteredReports.length;
+  const reportsToday = filteredReports.filter(report => report.dateTime && report.dateTime.split('T')[0] === currentDate).length;
 
-    const collectedPercentage = totalReports !== 0 ? (collectedCount / totalReports) * 100 : 0;
-    const uncollectedPercentage = totalReports !== 0 ? (uncollectedCount / totalReports) * 100 : 0;
-
+  const collectedCount = filteredReports.filter(report => report.status === 'collected').length;
+  
     return (
       <div className="summary-con">
         <div id="rectangle_279">
@@ -270,7 +260,7 @@ export default function Report() {
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>Garbage Reports</h1>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
           <div className="summary-con">
-          <Summary userMunicipality={userMunicipality} />
+            {Summary()}
           </div>
           </div>
         </div>
