@@ -5,6 +5,7 @@ import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, wher
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { FaSearch, FaBell } from 'react-icons/fa';
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Import Firebase auth functions
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
@@ -22,7 +23,7 @@ export default function Report() {
   const [totalReports, setTotalReports] = useState(0);
   const [reports, setReports] = useState([]);
   const [usersData, setUsersData] = useState({});
-  
+
   const storage = getStorage();
   let imageURL, viewImageURL;
 
@@ -30,8 +31,6 @@ export default function Report() {
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "postImages/");
   const [reportImage, setReportImage] = useState([]);
-
-  
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -90,67 +89,64 @@ export default function Report() {
   const collectedPercentage = totalReports !== 0 ? (collectedCount / totalReports) * 100 : 0;
   const uncollectedPercentage = totalReports !== 0 ? (uncollectedCount / totalReports) * 100 : 0;
 
-/*
-useEffect(() => {
-  const fetchUserReports = async () => {
-    try {
-      const reportsCollection = collection(db, 'generalUsersReports');
-      const reportsQuery = query(reportsCollection);
-      const reportsSnapshot = await getDocs(reportsQuery);
-
-      const userReportsData = reportsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setUserReports(userReportsData);
-    } catch (error) {
-      console.error('Error fetching user reports:', error);
-    }
-  };
-
-  fetchUserReports();
-}, []);*/
-
-useEffect(() => {
-  const fetchUserReports = async () => {
-    try {
-      // Fetch user reports
-      const reportsCollection = collection(db, 'generalUsersReports');
-      const reportsSnapshot = await getDocs(reportsCollection);
-      const userReportsData = reportsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // Fetch user data to associate names with reports
-      const usersCollection = collection(db, 'users');
-      const usersSnapshot = await getDocs(usersCollection);
-      const usersData = usersSnapshot.docs.reduce((acc, doc) => {
-        acc[doc.id] = doc.data();
-        return acc;
-      }, {});
-
-      // Update userReportsData with user names
-      const reportsWithNames = userReportsData.map(report => ({
-        ...report,
-        userName: `${usersData[report.userId]?.firstName || ''} ${usersData[report.userId]?.lastName || ''}`
-      }));
-
-      setUserReports(reportsWithNames);
-      setFilteredReports(reportsWithNames); // Set initial filtered data
-      setOriginalUserReports(reportsWithNames);
-      
-      // Set the usersData state here
-      setUsersData(usersData);
-    } catch (error) {
-      console.error('Error fetching user reports:', error);
-    }
-  };
-
-  fetchUserReports();
-}, []); // Removed [selectedLocation] dependency
-
+  useEffect(() => {
+    const fetchUserReports = async () => {
+      try {
+        // Fetch the municipality of the current logged-in user
+        const auth = getAuth();
+        const user = await new Promise((resolve, reject) => {
+          onAuthStateChanged(auth, user => {
+            if (user) {
+              resolve(user);
+            } else {
+              reject(new Error('User not found'));
+            }
+          });
+        });
+        
+        const email = user.email;
+        const firestore = getFirestore();
+        const usersCollection = collection(firestore, 'users');
+        const querySnapshot = await getDocs(query(usersCollection, where('email', '==', email)));
+  
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          const userMunicipality = userData.municipality;
+  
+          const reportsCollection = collection(db, 'generalUsersReports');
+          const reportsQuery = query(reportsCollection, where('municipality', '==', userMunicipality));
+          const reportsSnapshot = await getDocs(reportsQuery);
+          const userReportsData = reportsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+  
+          const allUsersSnapshot = await getDocs(usersCollection);
+          const usersData = allUsersSnapshot.docs.reduce((acc, doc) => {
+            acc[doc.id] = doc.data();
+            return acc;
+          }, {});
+  
+          const reportsWithNames = userReportsData.map(report => ({
+            ...report,
+            userName: `${userData.firstName || ''} ${userData.lastName || ''}`
+          }));
+  
+          setUserReports(reportsWithNames);
+          setFilteredReports(reportsWithNames); 
+          setOriginalUserReports(reportsWithNames);
+          
+          setUsersData(usersData);
+        }
+      } catch (error) {
+        console.error('Error fetching user reports:', error);
+      }
+    };
+  
+    fetchUserReports();
+  }, []);
+  
+  
   const formatDateTime = (dateTime) => {
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     return new Date(dateTime).toLocaleDateString(undefined, options);
@@ -193,6 +189,7 @@ useEffect(() => {
     setFilteredReports(sortedReports);
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
+
 function Summary() {
     return (
       <div className="summary-con">
@@ -249,6 +246,7 @@ function Summary() {
       </div>
     );
   }
+  
      return (
       <>
       <div style={{ marginLeft: 40, width: 1100 }}>
@@ -289,8 +287,8 @@ function Summary() {
             {filteredReports.map((item) => (
               <tr key={item.id} className="tableRow" onClick={() => handleEdit(item.id)}>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-        {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
-      </td>
+                  {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
+                </td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatDateTime(item.dateTime)}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.location}</td>
