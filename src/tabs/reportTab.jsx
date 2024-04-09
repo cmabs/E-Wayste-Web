@@ -5,9 +5,8 @@ import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, wher
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { FaSearch, FaBell } from 'react-icons/fa';
-import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Import Firebase auth functions
-import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
-import { ImCheckmark } from 'react-icons/im';
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
+import {  MdDelete } from 'react-icons/md';
 import { Button } from "@mui/material";
 
 export default function Report() {
@@ -23,6 +22,7 @@ export default function Report() {
   const [totalReports, setTotalReports] = useState(0);
   const [reports, setReports] = useState([]);
   const [usersData, setUsersData] = useState({});
+  const [reportStatus, setReportStatus] = useState({}); // New state for storing report status
 
   const storage = getStorage();
   let imageURL, viewImageURL;
@@ -125,6 +125,12 @@ export default function Report() {
             acc[doc.id] = doc.data();
             return acc;
           }, {});
+
+          // Fetching report status
+          const statusData = userReportsData.reduce((acc, report) => {
+            acc[report.id] = report.status;
+            return acc;
+          }, {});
   
           const reportsWithNames = userReportsData.map(report => ({
             ...report,
@@ -134,6 +140,7 @@ export default function Report() {
           setUserReports(reportsWithNames);
           setFilteredReports(reportsWithNames); 
           setOriginalUserReports(reportsWithNames);
+          setReportStatus(statusData); // Set report status state
           
           setUsersData(usersData);
         }
@@ -163,16 +170,23 @@ export default function Report() {
     setFilteredReports(filtered);
   };
   
-  const handleEdit = (id) => {
-    // Implement edit logic here
-    console.log(`Edit item with ID: ${id}`);
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'generalUsersReports', id));
+      setUserReports(userReports.filter(report => report.id !== id));
+      setFilteredReports(filteredReports.filter(report => report.id !== id));
+      setOriginalUserReports(originalUserReports.filter(report => report.id !== id));
+      setReportStatus((prevStatus) => {
+        const newStatus = { ...prevStatus };
+        delete newStatus[id];
+        return newStatus;
+      });
+      console.log(`Report with ID ${id} deleted successfully.`);
+    } catch (error) {
+      console.error('Error deleting report:', error);
+    }
   };
-
-  const handleDelete = (id) => {
-    // Implement delete logic here
-    console.log(`Delete item with ID: ${id}`);
-  };
-
+  
   const handleSort = () => {
     const sortedReports = [...filteredReports].sort((a, b) => {
       const dateA = new Date(a.dateTime);
@@ -189,14 +203,17 @@ export default function Report() {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
-function Summary() {
-  const currentDate = new Date().toISOString().split('T')[0];
+  function Summary() {
+    const totalReports = filteredReports.length;
   
-  const totalReports = filteredReports.length;
-  const reportsToday = filteredReports.filter(report => report.dateTime && report.dateTime.split('T')[0] === currentDate).length;
-
-  const collectedCount = filteredReports.filter(report => report.status === 'collected').length;
+    const currentDate = new Date().toISOString().split('T')[0];
+    const reportsToday = filteredReports.filter(report => {
+      const reportDate = new Date(report.dateTime).toISOString().split('T')[0];
+      return reportDate === currentDate;
+    }).length;
   
+    const collectedCount = filteredReports.filter(report => report.status === 'collected').length;
+    
     return (
       <div className="summary-con">
         <div id="rectangle_279">
@@ -253,77 +270,79 @@ function Summary() {
     );
   }
   
-     return (
-      <>
+
+  return (
+    <>
       <div style={{ marginLeft: 40, width: 1100 }}>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>Garbage Reports</h1>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
-          <div className="summary-con">
-            {Summary()}
-          </div>
+            <div className="summary-con">
+              {Summary()}
+            </div>
           </div>
         </div>
-        <div style={{ marginTop: 290, marginBottom: 40,}}>
-        <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10}}>
+        <div style={{ marginTop: 290, marginBottom: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10}}>
             <input
-                  type="text"
-                  placeholder="Search by location, or date"
-                  className="searchBar"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
-                  <FaSearch style={{ fontSize: 20 }} />
-                </button>
-                <Button style={{ backgroundColor: '#51AF5B', marginLeft: 8, color: 'white', borderRadius: 13}} onClick={handleSort}>Sort</Button>
+              type="text"
+              placeholder="Search by location, or date"
+              className="searchBar"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+              <FaSearch style={{ fontSize: 20 }} />
+            </button>
+            <Button style={{ backgroundColor: '#51AF5B', marginLeft: 8, color: 'white', borderRadius: 13}} onClick={handleSort}>Sort</Button>
           </div>
-        <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
-              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date Reported</th>
-              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
-              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
-              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Image</th>
-              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody className="reportTableBody" style={{ width: 2000 }}>
-            {filteredReports.map((item) => (
-              <tr key={item.id} className="tableRow" onClick={() => handleEdit(item.id)}>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                  {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
-                </td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatDateTime(item.dateTime)}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.location}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                {reportImage.map((url) => {
-                if(url.includes(item.associatedImage)) {
-                    imageURL = url;
-                }
-              })}
-              <div style={{ width: '100%', height: 50, borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
-                {item.associatedImage && (
-                  <a
-                    href="#"
-                    onClick={() => {setOpenImage(true); setImageToView(item.associatedImage)}}
-                  >
-                    <img src={imageURL} alt="Report" style={{ width: 90, height: 'auto', resizeMode: 'cover' }} />
-                    <span style={{ textDecoration: 'underline', color: 'blue', cursor: 'pointer' }}></span>
-                  </a>
-                )}
-              </div>
-              </td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                  <MdOutlineModeEdit style={{ cursor: 'pointer' }} />
-                  <MdDelete onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} style={{ cursor: 'pointer', marginLeft: '8px' }} />
-                </td>
+          <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date Reported</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th> {/* New column for Status */}
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Image</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="reportTableBody" style={{ width: 2000 }}>
+              {filteredReports.map((item) => (
+                <tr key={item.id} className="tableRow">
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
+                  </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatDateTime(item.dateTime)}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.location}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{reportStatus[item.id]}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {reportImage.map((url) => {
+                      if(url.includes(item.associatedImage)) {
+                          imageURL = url;
+                      }
+                    })}
+                    <div style={{ width: '100%', height: 50, borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
+                      {item.associatedImage && (
+                        <a
+                          href="#"
+                          onClick={() => {setOpenImage(true); setImageToView(item.associatedImage)}}
+                        >
+                          <img src={imageURL} alt="Report" style={{ width: 90, height: 'auto', resizeMode: 'cover' }} />
+                          <span style={{ textDecoration: 'underline', color: 'blue', cursor: 'pointer' }}></span>
+                        </a>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    <MdDelete onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} style={{ cursor: 'pointer', marginLeft: '14px', color: 'red', fontSize: '20px'}} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </>

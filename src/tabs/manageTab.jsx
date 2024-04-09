@@ -401,8 +401,6 @@ export default function UserManage() {
           </tbody>
         </table>
       );
-    } else {
-      //return renderTableContent();  
     }
   }
   

@@ -17,12 +17,7 @@ Daisy Ree Tabal
     border-radius: 25px;
     align-items: center;
     transition: transform 0.3s ease;
-}
-.orangeBox2:hover{
-    transform: scale(1.05); 
-    background: #EE7C29;
-
-}
+}   
 .mapDashboard {
     height: 400px;
     width: 900px;
