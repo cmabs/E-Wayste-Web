@@ -2,21 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { getFirestore, collection, getDocs, getDoc, doc, query, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Autocomplete } from '@react-google-maps/api'; // Import Autocomplete
-import "../styleSheet/schedTabStyle.css";
 
-export default function AddSchedModal({ isOpen, handleClose }) {
-  const [selectedType, setSelectedType] = useState("");
+import '../styleSheet/EditModal.css';
+
+export default function EditAssignmentModal({ isOpen, handleClose }) {
   const [garbageTrucks, setGarbageTrucks] = useState([]); 
   const [selectedTruck, setSelectedTruck] = useState(""); 
   const [currentUserLguCode, setCurrentUserLguCode] = useState(""); 
-  const [location, setLocation] = useState(""); // State to hold location input
+  const [location, setLocation] = useState("");
 
   const handleLocationChange = (e) => {
     setLocation(e.target.value);
-  };
-
-  const handleTypeChange = (e) => {
-    setSelectedType(e.target.value);
   };
 
   useEffect(() => {
@@ -29,6 +25,7 @@ export default function AddSchedModal({ isOpen, handleClose }) {
       document.body.removeChild(script);
     };
   }, []);
+
   const fetchLoggedInUserLguCode = async () => {
     try {
       const auth = getAuth();
@@ -51,6 +48,7 @@ export default function AddSchedModal({ isOpen, handleClose }) {
       console.error('Error fetching logged-in user data:', error);
     }
   };
+
   useEffect(() => {
     fetchLoggedInUserLguCode();
   }, []);
@@ -99,28 +97,35 @@ export default function AddSchedModal({ isOpen, handleClose }) {
   };
 
 
+  const handleCancel = () => {
+    handleClose();
+  };
+
   return (
-    <>
-      {isOpen && (
-        <div className="addsched-modal-overlay">
-          <div className="add-sched-modal">
-            <div>
-              <p style={{ marginLeft: 30, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
-                Add Schedule
-              </p>
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <label htmlFor="scheduleType">Select Type:</label>
-              <select id="scheduleType" value={selectedType} onChange={handleTypeChange}>
-                <option value="">Select Type</option>
-                <option value="Collection">Collection</option>
-                <option value="Assignment">Assignment</option>
-                <option value="Event">Event</option>
-              </select>
-            </div>
-            {selectedType === "Collection" && (
-              <>
-                <Autocomplete
+    <div className={`modal ${isOpen ? 'is-open' : ''}`}>
+      <div className="modal-overlay" onClick={handleCancel}></div>
+      <div className="modal-content">
+        <div className="modal-header">
+        <p style={{  fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
+                  Edit Assignment
+          </p>
+        </div>
+        <div  style={{ marginBottom: 20 }}> 
+          {/* <label htmlFor="scheduleType">Select Type:</label> */}
+        </div>
+        <div className='edit-sched-modal' >
+        <input type="text" placeholder="Description" />
+        <select value={selectedTruck} onChange={handleTruckChange}
+          style={{ width: '80%', padding: '8px',marginBottom: '10px',border: '1px solid #ccc',borderRadius: '5px',boxSizing: 'border-box',
+            marginLeft: '60px',fontFamily: 'Inter',fontSize: '16px'}}>
+            <option value="">Select Garbage Truck</option>
+            {garbageTrucks.map(truck => (
+              <option key={truck.id} value={truck.plateNo}>
+                {`${truck.plateNo} [Driver: ${truck.driverFirstName} ${truck.driverLastName}]`}
+              </option>
+            ))}
+          </select>
+          <Autocomplete
                   onLoad={(autocomplete) => {
                     console.log('Autocomplete loaded:', autocomplete);
                   }}
@@ -130,60 +135,15 @@ export default function AddSchedModal({ isOpen, handleClose }) {
                 >
                  <input type="text" value={location} onChange={handleLocationChange} placeholder="Location" />
                 </Autocomplete>
-                <input type="date" placeholder="Date" />
-                <input type="time" placeholder="Time" />
-              </>
-            )}
-            {selectedType === "Assignment" && (
-              <>
-                <input type="text" placeholder="Description" />
-                <select value={selectedTruck} onChange={handleTruckChange}>
-                  <option value="">Select Garbage Truck</option>
-                  {garbageTrucks.map(truck => (
-                    <option key={truck.id} value={truck.plateNo}>
-                    {`${truck.plateNo} [Driver: ${truck.driverFirstName} ${truck.driverLastName}]`}
-                  </option>
-                  ))}
-                </select>
-                <Autocomplete
-                  onLoad={(autocomplete) => {
-                    console.log('Autocomplete loaded:', autocomplete);
-                  }}
-                  onPlaceChanged={() => {
-                    console.log('Place changed');
-                  }}
-                >
-                 <input type="text" value={location} onChange={handleLocationChange} placeholder="Location" />
-                </Autocomplete>
-                <input type="date" placeholder="Date" />
-                <input type="time" placeholder="Time" />
-              </>
-            )}
-            {selectedType === "Event" && (
-              <>
-                <input type="text" placeholder="Title" />
-                <input type="text" placeholder="Description" />
-                <Autocomplete
-                  onLoad={(autocomplete) => {
-                    console.log('Autocomplete loaded:', autocomplete);
-                  }}
-                  onPlaceChanged={() => {
-                    console.log('Place changed');
-                  }}
-                >
-                 <input type="text" value={location} onChange={handleLocationChange} placeholder="Location" />
-                </Autocomplete>
-                <input type="date" placeholder="Date" />
-                <input type="time" placeholder="Time" />
-              </>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-              <button className="cancel" onClick={handleClose}>Cancel</button>
+
+          <input type="date" placeholder="Date" />
+          <input type="time" placeholder="Time" />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+              <button className="cancel" onClick={handleCancel}>Cancel</button>
               <button className="submit">Save</button>
             </div>
           </div>
-        </div>
-      )}
-    </>
+      </div>
   );
 }

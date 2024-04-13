@@ -5,6 +5,9 @@ import '../styleSheet/schedTabStyle.css';
 import { db } from '../firebase-config';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import AddSchedModal from "../Modals/AddSched";
+import EditAssignmentModal from "../Modals/EditAssignment";
+import EditCollectionModal from "../Modals/EditCollection";
+import EditEventModal from "../Modals/EditEvent";
 
   export default function Schedule() {
     const [scheduleData, setScheduleData] = useState([]);
@@ -19,6 +22,10 @@ import AddSchedModal from "../Modals/AddSched";
     const [showAssignmentsTable, setShowAssignmentsTable] = useState(false); 
     const [showAllScheduleTable, setShowAllScheduleTable] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditEventModalOpen, setIsEditEventModalOpen] =useState (false);
+    const [isEditAssignmentModalOpen, setIsEditAssignmentModalOpen] = useState(false);
+    const [isEditCollectionModalOpen, setIsEditCollectionModalOpen] =useState (false);
+    const [selectedCollection, setSelectedCollection] =useState ();
 
     const scheduleCollection = collection(db, 'schedule');
 
@@ -167,10 +174,38 @@ import AddSchedModal from "../Modals/AddSched";
     const handleAddSchedClick = () => {
       setIsModalOpen(true);
     };
+    
+
   
     const handleCloseModal = () => {
       setIsModalOpen(false);
     };
+    const handleEventCloseModal = () => {
+      setIsEditEventModalOpen(false);
+    }
+    const handleEventEditClick = () => {
+      setIsEditEventModalOpen(true);
+      setIsEditAssignmentModalOpen(false);
+      setIsEditCollectionModalOpen(false);
+    };
+    const handleCollectionCloseModal = () => {
+      setIsEditCollectionModalOpen(false);
+    }
+   
+    const handleCollectionEditClick = (selectedCollection) => {
+      setSelectedCollection(selectedCollection); // Set the selected collection data
+      setIsEditCollectionModalOpen(true); // Open the edit collection modal
+    };
+    
+    const handleAssignmentCloseModal = () => {
+      setIsEditAssignmentModalOpen(false);
+    }
+    const handleAssignmentEditClick = () => {
+      setIsEditAssignmentModalOpen(true);
+      setIsEditEventModalOpen(false);
+      setIsEditCollectionModalOpen(false);
+    };
+
 
     const getRouteLocationNames = (coordinates) => {
       return coordinates.map(coord => coord.locationName).join(', ');
@@ -313,7 +348,7 @@ import AddSchedModal from "../Modals/AddSched";
                           <td>{getRouteLocationNames(schedule.collectionRoute.coordinates)}</td>
                           <td>{schedule.assignCollector}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
+                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} onClick={handleCollectionEditClick} /> {/* Edit icon */}
                             <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
                           </td>
                         </tr>
@@ -346,7 +381,7 @@ import AddSchedModal from "../Modals/AddSched";
                           <td>{event.startTime}</td>
                           <td>{event.location}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
+                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} onClick={handleEventEditClick} /> {/* Edit icon */}
                             <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
                           </td>
                         </tr>
@@ -379,7 +414,7 @@ import AddSchedModal from "../Modals/AddSched";
                           <td>{assignment.location}</td>
                           <td>{assignment.assignCollector}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
+                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} onClick={handleAssignmentEditClick} /> {/* Edit icon */}
                             <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
                           </td>
                         </tr>
@@ -389,6 +424,17 @@ import AddSchedModal from "../Modals/AddSched";
                 )}
               </div>
             )}
+            <div>
+                  {isEditEventModalOpen && <EditEventModal isOpen={isEditEventModalOpen} handleClose={handleEventCloseModal} />}
+                  {isEditCollectionModalOpen && (
+                  <EditCollectionModal
+                    isOpen={isEditCollectionModalOpen}
+                    handleClose={handleCollectionCloseModal}
+                    selectedCollection={selectedCollection} // Pass the selected collection data
+                  />
+                )}
+                  {isEditAssignmentModalOpen && <EditAssignmentModal isOpen={isEditAssignmentModalOpen} handleClose={handleAssignmentCloseModal} />}
+              </div>
           </div>
         </div>
       );
