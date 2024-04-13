@@ -16,20 +16,9 @@ Daisy Ree Tabal
     background-color: rgb(255, 219, 172);
     border-radius: 25px;
     align-items: center;
-}
-.mapDashboard {
-    height: 400px;
-    width: 900px;
-    background-image: url('../images/SampleMap.png'); 
-    background-repeat: no-repeat;
-    background-attachment: scroll;
-    background-size: 100% 130%;
-    background-position: center;
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 0.5px;
-    border-color: rgb(180,180,180);
-}
+    transition: transform 0.3s ease;
+}   
+
 .userList {
     height: 100%;
     width: 100%;
@@ -40,6 +29,7 @@ Daisy Ree Tabal
     margin-bottom: 30px;
     overflow-y: auto;
 }
+
 .userList::-webkit-scrollbar {
     width: 5px;
 }

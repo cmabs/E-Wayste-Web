@@ -45,9 +45,6 @@ export default function Home() {
               setOpenTab(<Schedule />);
               break;
           case 'option6':
-              setOpenTab(<Newsfeed />);
-              break;
-          case 'option7':
               setOpenTab(<Profile />);
               break;
           default:
@@ -86,10 +83,7 @@ export default function Home() {
               <button className={sideNavlink === 'option5' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option5')}><BiCalendar style={{ fontSize: '1.5em' }} />Schedule</button>
             </div>
             <div className="divNavB">
-              <button className={sideNavlink === 'option6' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option6')}><MdLibraryBooks style={{ fontSize: '1.5em' }} />Newsfeed</button>
-            </div>
-            <div className="divNavB">
-              <button className={sideNavlink === 'option7' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option7')}><MdAccountCircle style={{ fontSize: '1.5em' }} />User Profile</button>
+              <button className={sideNavlink === 'option7' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option6')}><MdAccountCircle style={{ fontSize: '1.5em' }} />User Profile</button>
             </div>
           </div>
 

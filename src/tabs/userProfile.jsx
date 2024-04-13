@@ -8,6 +8,7 @@ import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdEdit } from "react-icons/md";
 
 export default function Profile() {
+    
     return (
         <>
             <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
@@ -23,9 +24,6 @@ export default function Profile() {
                 <div style={{marginTop:40, display:'flex', flexDirection:'column'}}>
                     <h1 style={{fontFamily:'Inter', color:'rgb(50, 50, 50)', fontWeight: 800, fontSize: 20}}>Personal Info</h1>
                     <div style={{display:'flex', width: '100%', flexDirection:'column', alignItems:"flex-end"}}>
-                        <button  className="btnEdit">
-                            <MdEdit/>
-                        </button>
                         <div style={{display:'flex', flexDirection:'column', width:'100%', borderStyle:"solid", borderWidth: 1, borderColor: 'green', paddingTop: 15, paddingBottom: 20}}>
                             <div style={{display: 'flex', flexDirection:'row',flex: 1, marginLeft: 20, }}>
                                 <div style={{display: 'flex',flex: 1, flexDirection: 'column', gap: 43, paddingTop: 26}}>

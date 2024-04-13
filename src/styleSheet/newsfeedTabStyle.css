@@ -115,10 +115,10 @@ button.editB {
     transition: 0.2s;
 }
   
-.pending-users-button {
+.pendingBtn {
     position: absolute;
     top: 130px;
-    left: 340px;
+    margin-left: 855px;
     background-color: green;
     color: white;
     font-weight: 600;
@@ -128,10 +128,81 @@ button.editB {
     cursor: pointer;
 }
   
-.pending-users-button:hover {
+.pendingBtn:hover {
     background-color: darkgreen;
     transition: background-color 0.3s ease-in-out;
     transform: scale(1.05);
+}
+
+.add-truck-btn{
+    position: absolute;
+    top: 130px;
+    margin-left: 1000px;
+    background-color: #F2BE2D;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+  
+.add-truck-btn:hover {
+    background-color: #FDBA00;
+    transition: background-color 0.3s ease-in-out;
+    transform: scale(1.05);
+}
+
+.collector-btn {
+    position: absolute;
+    top: 140px;
+    left: 330px;
+    background-color: #ffffff;
+    color: #51AF5B;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none; /* Remove default underline */
+}
+
+.collector-btn:hover {
+    text-decoration: none; /* Remove default underline on hover */
+    transition: background-color 0.3s ease-in-out;
+    transform: scale(1.05);
+}
+  
+.collector-btn.clicked {
+    color: #005809;
+    text-decoration: underline; /* Add underline when clicked */
+}
+
+.truck-btn {
+    position: absolute;
+    top: 140px;
+    left: 450px;
+    background-color: #f7f9eb;
+    color: #51AF5B;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none; /* Remove default underline */
+}
+
+.truck-btn:hover {
+    text-decoration: none; /* Remove default underline on hover */
+    transition: background-color 0.3s ease-in-out;
+    transform: scale(1.05);
+}
+  
+.truck-btn.clicked {
+    color: #005809;
+    text-decoration: underline; /* Add underline when clicked */
 }
 
 .modal {

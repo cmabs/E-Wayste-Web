@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import '../styleSheet/manageTabStyle.css';
 import { db, storage } from '../firebase-config';
-import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, addDoc, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { v4 as uuidv4 } from "uuid";
+import { Select, MenuItem } from '@mui/material';
 
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
@@ -14,8 +16,11 @@ export default function UserManage() {
   const [users, setUsers] = useState([]);
   const [deleteUserId, setDeleteUserId] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
   const [isPendingUsers, setIsPendingUsers] = useState(false);
-  const storage = getStorage();
+  const [userTotal, setUserTotal] = useState(0); 
+  const [sortOrder, setSortOrder] = useState('asc'); 
+  const [selectedAccountType, setSelectedAccountType] = useState('All'); 
 
   let imageURL, viewImageURL;
   const [userLicense, setUserLicense] = useState([]);
@@ -25,16 +30,34 @@ export default function UserManage() {
 
   const fetchUsers = async () => {
     try {
+      console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
       const firestore = getFirestore();
       const usersCollection = collection(firestore, isPendingUsers ? 'pendingUsers' : 'users');
       const usersSnapshot = await getDocs(usersCollection);
-
-      const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  
+      let usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  
+      // Sort the users based on the 'Name' column
+      usersData = usersData.sort((a, b) => {
+        const nameA = `${a.firstName} ${a.lastName}`.toUpperCase();
+        const nameB = `${b.firstName} ${b.lastName}`.toUpperCase();
+  
+        if (sortOrder === 'asc') {
+          return nameA.localeCompare(nameB);
+        } else {
+          return nameB.localeCompare(nameA);
+        }
+      });
+  
+      console.log('Sorted Users:', usersData);
+  
       setUsers(usersData);
+      setUserTotal(usersData.length);
     } catch (error) {
       console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
     }
   };
+  
 
   useEffect(() => {
     console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
@@ -57,6 +80,11 @@ export default function UserManage() {
   })
   }, [])
 
+  const toggleSortOrder = () => {
+    console.log('Toggle sort order clicked');
+    setSortOrder((prevSortOrder) => (prevSortOrder === 'asc' ? 'desc' : 'asc'));
+  };
+  
   const handleDeleteUser = async (event, userId) => {
     event.preventDefault();
 
@@ -71,6 +99,18 @@ export default function UserManage() {
     }
   };
 
+  const SuccessModal = () => {
+    return (
+      <div className="modal">
+        <div className="modal-content">
+          <p>User successfully added!</p>
+          <button onClick={closeSuccessModal}>Close</button>
+        </div>
+      </div>
+    );
+  };
+    
+
   const handleApproveUser = async (event, userId) => {
     event.preventDefault();
     try {
@@ -83,19 +123,18 @@ export default function UserManage() {
       if (pendingUserSnapshot.exists()) {
         const userData = pendingUserSnapshot.data();
   
-        // Create user in Firebase Authentication
-        const { email, password } = userData; // You need to have a password for the user
+        const { email, password } = userData;
         await createUserWithEmailAndPassword(auth, email, password);
-  
-        // Remove user from pendingUsers collection
         await deleteDoc(pendingUserRef);
+        const lguCode = uuidv4().substring(0, 8);
   
-        // Update the users collection with the approved user data
         const usersCollection = collection(firestore, 'users');
-        await addDoc(usersCollection, userData);
+        const userDocRef = await addDoc(usersCollection, { ...userData, lguCode: lguCode });
   
         console.log('User approved successfully!');
+        console.log('User added to users collection with ID:', userDocRef.id);
         fetchUsers();
+        openSuccessModal();
       } else {
         console.error('User not found in pendingUsers collection.');
       }
@@ -103,7 +142,7 @@ export default function UserManage() {
       console.error('Error approving user:', error);
     }
   };
-
+  
   const handleRejectUser = async (event, userId) => {
     event.preventDefault();
 
@@ -117,12 +156,23 @@ export default function UserManage() {
     } catch (error) {
       console.error('Error rejecting user:', error);
     }
+  }; 
+
+  const openSuccessModal = () => {
+    setSuccessModalOpen(true);
   };
+  const closeSuccessModal = () => {
+    setSuccessModalOpen(false);
+  };
+  
 
   function UserListContent() {
+    const filteredUsers = selectedAccountType === 'All'
+    ? users
+    : users.filter((user) => user.accountType === selectedAccountType);
     return (
       <ul style={{ listStyleType: 'none', padding: 0 }}>
-        {users.map((user, userID) => (
+        {filteredUsers.map((user, userID) => (
           <li key={userID}>
             <div className='userListB'>
               <button style={{ display: 'flex', alignItems: 'center' }}>
@@ -136,7 +186,9 @@ export default function UserManage() {
                   <p>{user.email}</p>
                 </div>
                 <div style={{ width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
-                  <p>{user.accountType}</p>
+                  {selectedAccountType === 'All' || user.accountType === selectedAccountType ? (
+                    <p>{user.accountType}</p>
+                  ) : null}
                 </div>
                 <div style={{ width: '20%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(200,200,200)', overflow: 'hidden' }}>
                   <p>{`${user.barangay}, ${user.municipality}, ${user.province}`}</p>
@@ -183,10 +235,8 @@ export default function UserManage() {
                       />
                     </>
                   )}
-                  {/* Conditionally show "Edit" and "Delete" buttons based on whether it is pending users or not */}
                   {!isPendingUsers && (
                     <>
-                      <MdOutlineModeEdit style={{ fontSize: 24, cursor: 'pointer', color: 'green' }} />
                       <MdDelete
                         style={{ fontSize: 24, gap: 5, cursor: 'pointer', color: 'red' }}
                         onClick={(event) => handleDeleteUser(event, user.id)}
@@ -204,13 +254,13 @@ export default function UserManage() {
 
   return (
     <>
-      <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
+      <div style={{ marginLeft: 40, marginTop: 40, width: 1080 }}>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
           <button className="pending-users-button" onClick={() => setIsPendingUsers(!isPendingUsers)}>Pending Users</button>
-          <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
-            {isPendingUsers ? 'Pending Users' : 'User Management'}
-          </h1>
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
+          <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 1000 }}>
+          {isPendingUsers ? 'Pending Users' : 'User Management'} ({userTotal})
+          </h1></div>
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', marginLeft: 40, marginTop: -45, gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
               <input type="text" placeholder="Search" className="searchBar" />
               <button className="searchButton"><FaSearch style={{ fontSize: 20 }} /></button>
@@ -219,13 +269,28 @@ export default function UserManage() {
               <FaBell />
             </button>
           </div>
-        </div>
+          {!isPendingUsers && (
+          <div style={{ marginBottom: -40, marginTop: 20,display:'flex', marginLeft: 700, fontFamily: 'Inter', fontSize: 14}}>
+            <label htmlFor="accountTypeSelect">Select Account Type: </label>
+            <select
+              id="accountTypeSelect"
+              onChange={(e) => setSelectedAccountType(e.target.value)}
+              value={selectedAccountType}
+            >
+              <option value="All">All</option>
+              <option value="Garbage Collector">Garbage Collector</option>
+              <option value="LGU / Waste Management Head">LGU / Waste Management Head</option>
+              <option value="Residents / General Users">Residents / General Users</option>
+            </select>
+          </div>)}
         <div style={{ marginTop: 70, marginBottom: 40, backgroundColor: 'rgb(243,243,243)', padding: 10, borderRadius: 20, width: 1100 }}>
           <div style={{ display: 'flex', width: '100%', borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(210,210,210)', marginBottom: 10, fontFamily: 'Inter', fontWeight: 500, fontSize: 14 }}>
             {!isPendingUsers ?
               <>
-                <div style={{ display: 'flex', marginLeft: 60, overflow: 'hidden', justifyContent: 'center' }}>
-                  <p>Name</p>
+                <div style={{ display: 'flex', marginLeft: 52, overflow: 'hidden', justifyContent: 'center' }}>
+                  <p onClick={toggleSortOrder} style={{ cursor: 'pointer' }}>
+                    Name {sortOrder === 'asc' ? '▲' : '▼'}
+                  </p>
                 </div>
                 <div style={{ display: 'flex', marginLeft: 120, overflow: 'hidden', justifyContent: 'center' }}>
                   <p>Username</p>
@@ -245,8 +310,10 @@ export default function UserManage() {
               </>
               :
               <>
-                <div style={{ display: 'flex', marginLeft: 50, overflow: 'hidden', justifyContent: 'center' }}>
-                  <p>Name</p>
+                <div style={{ display: 'flex', marginLeft: 40, overflow: 'hidden', justifyContent: 'center' }}>
+                  <p onClick={toggleSortOrder} style={{ cursor: 'pointer' }}>
+                    Name {sortOrder === 'asc' ? '▲' : '▼'}
+                  </p>
                 </div>
                 <div style={{ display: 'flex', marginLeft: 100, overflow: 'hidden', justifyContent: 'center' }}>
                   <p>Username</p>
@@ -289,6 +356,7 @@ export default function UserManage() {
         :
         <></>
       }
+      {isSuccessModalOpen && <SuccessModal />}
     </>
   );
 }

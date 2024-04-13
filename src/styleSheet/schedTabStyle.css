@@ -1,107 +1,444 @@
-.tab-header-sched {
-    font-size: 30px;
-    color: #0D5601;
-    margin: 20px;
-    margin-top: 30px;
-    font-weight: bolder;
-    font-family: Inter;
+.schedule-container {
+  
+  width: 1000px;
+  height: 105px ;
+  border-radius: 10px;
+  padding: 20px; /* Adjust the padding as needed */
+  margin-top: 15px;
+  margin-bottom: 20px;
+  position: absolute;
 }
 
-/* schedTabStyle.css */
+.schedule-Total {
+  position: absolute;
+  width: 90%;
+  max-width: 280px;
+  height: 200px;
+  max-height: 150px;
+  background: #E0F9B6;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  transition: transform 0.3s ease; /* Adding a smooth transition effect */
+}
 
-.schedule-container {
-    width: 100%;
-    height: 100%;
-    margin-left: 40px; /* Adjust the margin as needed */
+.reportTable{
+background: #F6F6F6;
+}
+
+.schedule-set{
+
+  position: absolute;
+  width: 1060px;
+  margin-top: 10px;
+  background: #FFFFFF;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  flex-direction: column;
+  
+}
+
+.scheduleB{
+  flex-direction: column;
+}
+.scheduleB button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 70px;
+
+  background: rgba(135, 255, 116, 0.21);
+  border-left: 2px solid #87FF74;
+  border-bottom: rgba(135, 255, 116, 0.21);
+  border-right: rgba(135, 255, 116, 0.21);
+  border-top: rgba(135, 255, 116, 0.21);
+
+  border-radius: 10px;
+  border-style: solid;
+  border-width: 2px;
+  
+  padding: 15px;
+  padding-top: 10px;
+  font-family: Inter;
+}
+
+.filterSchedule{
+margin-top: 30px;
+width: 1000px;
+}
+.collection{
+  background: #FFCB3C;
+  border:#FFCB3C;
+   margin-right: 10px;
+   border-radius: 5px;
+   cursor: pointer;
+}
+.allschedules{
+  background: #5bb1ea;
+  border:#5bb1ea;
+   margin-right: 10px;
+   border-radius: 5px;
+   cursor: pointer;
+}
+.allschedules:hover{
+  background-color: #1496ed
+}
+.collection:hover{
+  background-color: #ffb624;
+}
+.events{
+  background: #87FF74;
+  border: #87FF74;
+   margin-right: 10px;
+   border-radius: 5px;
+   cursor: pointer;
+}
+.events:hover{
+  background-color: #46e358;
+}
+.assignments{
+  background: #EE7C29;
+  border: #EE7C29;
+  margin-right: 580px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.assignments:hover{
+  background-color: #f4ab63;
+}
+
+.addSched{
+  background-color: green;
+  border: #51AF5B ;
+  border-radius: 5px;
+  color: white;
+}
+
+.addSched:hover{
+  background-color: #44a94e;
+  color: #ffffff;
+}
+.filter-box{
+  
+    position: absolute;
+    width: 1000px;
+    height:30px;
     background: #F9F9F9;
-    border-radius: 10px;
-    padding: 20px; /* Adjust the padding as needed */
-  }
-  
-  .tab-header-sched {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-  
-  .schedule-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-  }
-  
-  .event-card {
-    width: 300px;
-    padding: 15px;
-    background: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .event-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  
-  .event-details {
-    font-size: 14px;
-    color: #555;
-  }
-  
-  /* Add more styles as needed */
-/* Add this to your schedTabStyle.css or create a new CSS file for event details styles */
-
-.event-details-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 20px;
-    border: 2px solid #51AF5B;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    width: 900px;
-
+    margin-left: 60px;
     
-  
-  }
-  
-  .event-details-container h2 {
-    color: #51AF5B;
-    font-size: 24px;
-    margin-bottom: 15px;
-  }
-  
-  .event-details-container p {
-    color: #333;
-    font-size: 16px;
-    margin: 8px 0;
-  }
-  
-  /* Add this class to your existing schedule-content */
-  .schedule-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  
-  /* Add hover effect for event cards */
-  .event-card {
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out;
-  }
-  
-  .event-card:hover {
-    transform: scale(1.05);
-  }
-  
-  /* Add a unique background color for the selected event */
-  .event-card.selected {
-    background-color: #51AF5B;
-    color: white;
-  }
+}
+.sideschedule{
+
+position: absolute;
+width: 800px;
+height: 599px;
+background: #F4FDF0;
+border-radius: 20px;
+
+}
+.selectType{
+
+  margin-top: 10px;
+  margin-left: 10px;
+
+
+}
+.buttonAdd{
+  margin-left: 232px;
+  margin-top: 50px;
+  padding: 50px ;
+} 
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* semi-transparent black background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #F4FDF0;
+  padding: 20px;
+  height: 600px;
+  width: 500px;
+  border-radius: 5px;
+  overflow: auto;
+ 
+}
+.modal-content button{
+  top: 100px;
+
+}
+.schedTable{
+  background: #F6F6F6;
+ margin-top: 10px;
+}
+.schedTableBody {
+  background: #F4FDF0;
+}
+
+.schedTableBody tr:hover {
+  background-color: #E5F7E7 /* Change background color on hover */
+}
+
+.reportTableBody tr:active {
+  background-color: #d9d9d9; /* Change background color when pressed */
+}
+
+.colschedule-table {
+  margin-top: 20px;
+}
+
+.colschedule-table table {  
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.colschedule-table th,
+.colschedule-table td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  text-align: center;
+  background-color: rgb(255, 255, 218);
+}
+
+.colschedule-table th {
+  background-color: #ffb624;
+  text-align: center; /* Align table headers to center */
+}
+
+.colschedule-table td {
+  vertical-align: middle; /* Align cell content vertically to the middle */
+}
+
+.colschedule-table tr:hover {
+  background-color: #ebfcde;
+}
+
+.events-table {
+  margin-top: 20px;
+}
+
+.events-table table {  
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.events-table th,
+.events-table td {
+  border: 1px solid #ffffff;
+  padding: 5px;
+  text-align: center;
+  background-color: rgb(206, 241, 206);
+}
+
+.events-table th {
+  background-color: #87FF74;
+  text-align: center;
+}
+
+.events-table td {
+  vertical-align: middle; 
+}
+
+.events-table tr:hover {
+  background-color: #ebfcde;
+}
+
+.events-table .action-icons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.events-table .action-icons svg {
+  cursor: pointer;
+}
+
+.events-table .action-icons svg:hover {
+  opacity: 0.8;
+}
+
+.assignments-table {
+  margin-top: 20px;
+}
+
+.assignments-table table {  
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assignments-table th,
+.assignments-table td {
+  border: 1px solid #ecc8b9;
+  padding: 5px;
+  text-align: center;
+  background-color: rgb(244, 217, 204);
+}
+
+.assignments-table th {
+  background-color: #EE7C29;
+  text-align: center; 
+  height:30px;
+}
+
+.assignments-table td {
+  vertical-align: middle; 
+}
+
+.assignments-table tr:hover {
+  background-color: #ebfcde;
+}
+
+.assignments-table .action-icons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.assignments-table .action-icons svg {
+  cursor: pointer;
+}
+
+.assignments-table .action-icons svg:hover {
+  opacity: 0.8;
+}
+
+.allschedule-table {
+  margin-top: 20px;
+}
+
+.allschedule-table table {  
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.allschedule-table th,
+.allschedule-table td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  text-align: center;
+}
+
+.allschedule-table th {
+  background-color: #d1ebef;
+  text-align: center; /* Align table headers to center */
+}
+
+.allschedule-table td {
+  vertical-align: middle; /* Align cell content vertically to the middle */
+}
+
+.allschedule-tabletr:hover {
+  background-color: #ebfcde;
+}
+
+.allschedule-table .action-icons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.allschedule-table .action-icons svg {
+  cursor: pointer;
+}
+
+.allschedule-table .action-icons svg:hover {
+  opacity: 0.8;
+}
+/*modal*/
+.add-sched-modal {
+  position: absolute;
+  left: 400px;
+  top: 90px;
+  width: 700px;
+  height: 550px;
+  background: #F4FDF0;
+  border-radius: 20px;
+}
+
+.addsched-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Transparent black background */
+  z-index: 999; /* Ensure it's above other content */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.addsched-modal-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 80%; /* Adjust width as needed */
+  max-height: 80%; /* Adjust height as needed */
+  overflow-y: auto; /* Enable vertical scrolling if content exceeds height */
+}
+.add-sched-modal p {
+  margin-left: 30px;
+  font-family: 'Inter';
+  color: rgb(13, 86, 1);
+  font-size: 50px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  width: 650px;
+}
+
+.add-sched-modal label {
+  display: block;
+  margin-bottom: 5px;
+  margin-left: 30px;
+}
+
+.add-sched-modal select,
+.add-sched-modal input[type="text"],
+.add-sched-modal input[type="date"],
+.add-sched-modal input[type="time"] {
+  width: 80%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  margin-left: 60px;
+  font-family: 'Inter'; 
+  font-size: 16px; 
+}
+
+.add-sched-modal button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.add-sched-modal button.cancel {
+  background-color: #ef2f2f;
+}
+
+.add-sched-modal button.submit {
+  background-color: green;
+  color: white;
+}
+/* For edit icon button */
+.allschedule-table td > svg:first-child, /* Edit icon in allschedule-table */
+.colschedule-table td > svg:first-child, /* Edit icon in colschedule-table */
+.events-table td > svg:first-child, /* Edit icon in events-table */
+.assignments-table td > svg:first-child { /* Edit icon in assignments-table */
+  cursor: pointer;
+}
+
+/* For delete button */
+.allschedule-table td > svg:last-child, /* Delete icon in allschedule-table */
+.colschedule-table td > svg:last-child, /* Delete icon in colschedule-table */
+.events-table td > svg:last-child, /* Delete icon in events-table */
+.assignments-table td > svg:last-child { /* Delete icon in assignments-table */
+  cursor: pointer;
+}
+

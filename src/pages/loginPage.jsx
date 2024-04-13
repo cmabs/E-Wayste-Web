@@ -12,27 +12,38 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
-      const userQuery = query(
+      const usersAdminQuery = query(
         collection(db, "usersAdmin"),
         where("username", "==", username),
         where("password", "==", password)
       );
-      const querySnapshot = await getDocs(userQuery);
-      const users = querySnapshot.docs.map((doc) => {
-        const userData = doc.data();
-        return {
-          id: doc.id,
-          ...userData,
-        };
-      });
-      if (users.length === 0) {
+      const usersAdminSnapshot = await getDocs(usersAdminQuery);
+      
+      const lguQuery = query(
+        collection(db, "LGU"),
+        where("username", "==", username),
+        where("password", "==", password)
+      );
+      const lguSnapshot = await getDocs(lguQuery);
+  
+      const usersAdmin = usersAdminSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      const lguUsers = lguSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      const loggedInUser = usersAdmin.length > 0 ? usersAdmin[0] : lguUsers.length > 0 ? lguUsers[0] : null;
+  
+      if (!loggedInUser) {
         alert("User not found. Please check your credentials.");
         return;
       }
-      const loggedInUser = users[0];
+  
       console.log("Logged in successfully! User ID:", loggedInUser.id);
-      // Log the usersAdmin ID to the console
-      console.log("usersAdmin ID:", loggedInUser.id);
       navigate("/Home");
     } catch (error) {
       console.error("Error logging in: ", error);

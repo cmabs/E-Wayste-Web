@@ -49,20 +49,19 @@ export default function Register() {
     }
 
     try {
-      // Create user in Firebase Authentication
       const auth = getAuth();
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
       // Get the newly created user's UID
       const userId = userCredential.user.uid;
 
-      // Add user details to Firestore
       const newUser = {
         userId,
         firstName,
         lastName,
         username,
         email,
+        password
       };
       const docRef = await addDoc(collection(db, "usersAdmin"), newUser);
 
