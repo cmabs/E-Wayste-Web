@@ -236,7 +236,7 @@ button.editB {
 .add-sideUsers {
   position: absolute;
   width: 600px;
-  height: 500px;
+  height: 430px;
   background: #F4FDF0;
   border-radius: 20px;
 }
@@ -338,3 +338,4 @@ button.submit {
   cursor: pointer;
 }
 
+  

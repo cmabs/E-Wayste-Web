@@ -50,13 +50,16 @@ export default function AddTruckModal({ isOpen, handleClose }) {
     try {
       const firestore = getFirestore();
       const trucksCollection = collection(firestore, 'trucks');
-      const trucksSnapshot = await getDocs(trucksCollection);
+      const q = query(trucksCollection, where('lguCode', '==', currentUserLguCode));
+      const trucksSnapshot = await getDocs(q);
       const count = trucksSnapshot.docs.length;
+      console.log('Truck count for current user LGU code:', count);
       setTruckCount(count);
     } catch (error) {
       console.error('Error fetching truck count:', error);
     }
   };
+  
 
   const fetchGarbageCollectors = async () => {
     try {
@@ -159,15 +162,9 @@ export default function AddTruckModal({ isOpen, handleClose }) {
       </div>
       <div className="input-container" style={{ display: 'flex', flexDirection: 'column', marginTop: 20, alignItems: 'flex-start' }}>
         <div className="input-group">
-          <label className="label-addtruck" htmlFor="truckNo">Truck No.</label>
-          <input className="input-addtruck" type="text" id="truckNo" value={`${truckCount + 1}`} readOnly />
-        </div>
-
-        <div className="input-group">
           <label className="label-addtruck" htmlFor="plateNo">Plate No.</label>
           <input className="input-addtruck" type="text" id="plateNo" placeholder="Enter Plate No." value={plateNo} onChange={(e) => setPlateNo(e.target.value)} />
         </div>
-
         <div className="input-group">
           <label className="label-addtruck" htmlFor="assignedDriver">Assigned Driver</label>
           <select className="input-addtruck" id="assignedDriver" value={selectedDriver} onChange={handleDriverChange} style={{ background: 'white', borderRadius: '5px', padding: '5px', width: '298%' }}>

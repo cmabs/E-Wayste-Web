@@ -22,16 +22,9 @@ export default function Profile() {
     const auth = getAuth();
   
     useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          fetchUserProfile(user);
-        } else {
-          navigate("/login");
-        }
-      });
-  
-      const fetchUserProfile = async (user) => {
+      const fetchUserProfile = async () => {
         try {
+          const user = auth.currentUser;
           if (user) {
             const userEmail = user.email;
             const userRef = query(collection(db, "users"), where('email', '==', userEmail));
@@ -40,7 +33,7 @@ export default function Profile() {
               const doc = querySnapshot.docs[0];
               const { firstName, lastName, accountType, barangay, municipality, province, email, contactNo, lguCode } = doc.data();
               const displayName = `${firstName} ${lastName}`;
-  
+    
               setUserProfile({ displayName, accountType, barangay, municipality, province, email, contactNo, lguCode });
               setEditedBarangay(barangay);
               setEditedMunicipality(municipality);
@@ -58,9 +51,14 @@ export default function Profile() {
           console.error("Error fetching user profile:", error);
         }
       };
-  
-      return () => unsubscribe(); // Cleanup subscription
-    }, [auth, navigate]);
+    
+      fetchUserProfile();
+    
+      return () => {
+        // Cleanup function if needed
+      };
+    }, [auth]);
+    
 
     const handleSaveProfile = async () => {
       try {
@@ -96,7 +94,6 @@ export default function Profile() {
           alert("Failed to save profile. Please try again.");
       }
   };
-  
   
    
   return (

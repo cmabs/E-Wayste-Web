@@ -70,12 +70,14 @@ width: 1000px;
   border:#FFCB3C;
    margin-right: 10px;
    border-radius: 5px;
+   cursor: pointer;
 }
 .allschedules{
   background: #5bb1ea;
   border:#5bb1ea;
    margin-right: 10px;
    border-radius: 5px;
+   cursor: pointer;
 }
 .allschedules:hover{
   background-color: #1496ed
@@ -88,7 +90,7 @@ width: 1000px;
   border: #87FF74;
    margin-right: 10px;
    border-radius: 5px;
-
+   cursor: pointer;
 }
 .events:hover{
   background-color: #46e358;
@@ -98,6 +100,7 @@ width: 1000px;
   border: #EE7C29;
   margin-right: 580px;
   border-radius: 5px;
+  cursor: pointer;
 }
 .assignments:hover{
   background-color: #f4ab63;
@@ -200,11 +203,11 @@ border-radius: 20px;
   border: 1px solid #ddd;
   padding: 5px;
   text-align: center;
-  background-color: rgb(249, 249, 175);
+  background-color: rgb(255, 255, 218);
 }
 
 .colschedule-table th {
-  background-color: #f2f2f2;
+  background-color: #ffb624;
   text-align: center; /* Align table headers to center */
 }
 
@@ -227,19 +230,19 @@ border-radius: 20px;
 
 .events-table th,
 .events-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #ffffff;
   padding: 5px;
   text-align: center;
   background-color: rgb(206, 241, 206);
 }
 
 .events-table th {
-  background-color: #f2f2f2;
-  text-align: center; /* Align table headers to center */
+  background-color: #87FF74;
+  text-align: center;
 }
 
 .events-table td {
-  vertical-align: middle; /* Align cell content vertically to the middle */
+  vertical-align: middle; 
 }
 
 .events-table tr:hover {
@@ -268,17 +271,18 @@ border-radius: 20px;
   border-collapse: collapse;
 }
 
-.assignments-tablee th,
+.assignments-table th,
 .assignments-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #ecc8b9;
   padding: 5px;
   text-align: center;
-  background-color: rgb(232, 203, 188);
+  background-color: rgb(244, 217, 204);
 }
 
 .assignments-table th {
-  background-color: #f2f2f2;
+  background-color: #EE7C29;
   text-align: center; 
+  height:30px;
 }
 
 .assignments-table td {
@@ -318,8 +322,8 @@ border-radius: 20px;
   text-align: center;
 }
 
-.allschedule-tableth {
-  background-color: #f2f2f2;
+.allschedule-table th {
+  background-color: #d1ebef;
   text-align: center; /* Align table headers to center */
 }
 
@@ -421,6 +425,31 @@ border-radius: 20px;
 .add-sched-modal button.submit {
   background-color: green;
   color: white;
+}
+/* For edit icon button */
+.allschedule-table td > svg:first-child, /* Edit icon in allschedule-table */
+.colschedule-table td > svg:first-child, /* Edit icon in colschedule-table */
+.events-table td > svg:first-child, /* Edit icon in events-table */
+.assignments-table td > svg:first-child { /* Edit icon in assignments-table */
+  cursor: pointer;
+}
+
+/* For delete button */
+.allschedule-table td > svg:last-child, /* Delete icon in allschedule-table */
+.colschedule-table td > svg:last-child, /* Delete icon in colschedule-table */
+.events-table td > svg:last-child, /* Delete icon in events-table */
+.assignments-table td > svg:last-child { /* Delete icon in assignments-table */
+  cursor: pointer;
+}
+
+.add-location-button {
+  padding: 5px 5x;
+  background-color: orange;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 20px;
 }
 
 

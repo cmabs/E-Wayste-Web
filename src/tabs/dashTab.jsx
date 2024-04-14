@@ -43,7 +43,7 @@ export default function Dashboard() {
     
   useEffect(() => {
     fetchLoggedInUserLguCode();
-  }, []);
+  }, []); 
   
   useEffect(() => {
     if (loggedInUserLguCode && users.length > 0) {
@@ -96,11 +96,11 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    console.log('Fetching reports...');
-    if (loggedInUserMunicipality) {
+    if (loggedInUserMunicipality || users.length > 0) {
       fetchGeneralUsersReports();
     }
-  }, [loggedInUserMunicipality]);
+  }, [loggedInUserMunicipality, users]);
+
 
   useEffect(() => {
     if (loggedInUserLguCode) { 

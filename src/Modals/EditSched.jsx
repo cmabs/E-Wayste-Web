@@ -12,21 +12,23 @@ const mapContainerStyle = {
   height: '200px',
 };
 
-export default function AddSchedModal({ isOpen, handleClose }) {
-  const [selectedType, setSelectedType] = useState("");
-  const [garbageTrucks, setGarbageTrucks] = useState([]); 
-  const [selectedTruck, setSelectedTruck] = useState(""); 
-  const [currentUserLguCode, setCurrentUserLguCode] = useState(""); 
-  const [location, setLocation] = useState(""); 
-  const [selectedDate, setSelectedDate] = useState(""); 
-  const [startTime, setStartTime] = useState(""); 
-  const [description, setDescription] = useState("");
-  const [title, setTitle] = useState("");
-  const [latitude, setLatitude] = useState(""); 
-  const [longitude, setLongitude] = useState(""); 
-  const [userData, setUserData] = useState("");
-  const [locations, setLocations] = useState([]); 
-  const [collectionRoute, setCollectionRoute] = useState({ coordinates: [] }); 
+export default function EditSchedModal({ isOpen, handleClose, scheduleData }) {
+    const [selectedType, setSelectedType] = useState(scheduleData?.type || ""); 
+const [selectedTruck, setSelectedTruck] = useState(scheduleData?.assignedTruck || ""); 
+const [location, setLocation] = useState(scheduleData?.location || ""); 
+const [selectedDate, setSelectedDate] = useState(scheduleData?.selectedDate || ""); 
+const [startTime, setStartTime] = useState(scheduleData?.startTime || ""); 
+const [description, setDescription] = useState(scheduleData?.description || "");
+const [title, setTitle] = useState(scheduleData?.title || "");
+const [latitude, setLatitude] = useState(scheduleData?.latitude || ""); 
+const [longitude, setLongitude] = useState(scheduleData?.longitude || ""); 
+const [locations, setLocations] = useState(scheduleData?.collectionRoute.coordinates || []); 
+const [collectionRoute, setCollectionRoute] = useState(scheduleData?.collectionRoute || { coordinates: [] }); 
+
+    const [currentUserLguCode, setCurrentUserLguCode] = useState("");
+const [userData, setUserData] = useState("");
+const [garbageTrucks, setGarbageTrucks] = useState([]);
+
 
   const autocompleteRef = useRef(null); 
   const db = getFirestore();
@@ -259,7 +261,9 @@ export default function AddSchedModal({ isOpen, handleClose }) {
       console.error("Error saving schedule:", error);
     }
   };
-
+  
+  
+  
   
   return (
     <>
@@ -268,7 +272,7 @@ export default function AddSchedModal({ isOpen, handleClose }) {
         <div className="add-sched-modal" style={{ height: '550px', overflowY: 'auto'}}> 
             <div>
               <p style={{ marginLeft: 30, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
-                Add Schedule
+                Edit Schedule
               </p>
             </div>
             <div style={{ marginBottom: 20 }}>

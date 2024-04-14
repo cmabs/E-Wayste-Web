@@ -111,7 +111,8 @@ export default function Report() {
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
           const userMunicipality = userData.municipality;
-  
+          console.log('User municipality:', userMunicipality); // Logging the municipality
+          
           const reportsCollection = collection(db, 'generalUsersReports');
           const reportsQuery = query(reportsCollection, where('municipality', '==', userMunicipality));
           const reportsSnapshot = await getDocs(reportsQuery);
@@ -151,7 +152,6 @@ export default function Report() {
   
     fetchUserReports();
   }, []);
-  
   
   const formatDateTime = (dateTime) => {
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -213,6 +213,9 @@ export default function Report() {
     }).length;
   
     const collectedCount = filteredReports.filter(report => report.status === 'collected').length;
+    const collectedPercentage = totalReports !== 0 ? (collectedCount / totalReports) * 100 : 0;
+    const uncollectedCount = totalReports - collectedCount;
+    const uncollectedPercentage = totalReports !== 0 ? (uncollectedCount / totalReports) * 100 : 0;
     
     return (
       <div className="summary-con">
@@ -254,21 +257,22 @@ export default function Report() {
         <div id="some_id_4">{totalReports}</div>
         <div id="reports">REPORTS</div>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-            <div id="rectangle_282">
-              <p style={{marginLeft: 50, marginTop:5, fontSize: '1.1em', fontWeight: 500}}>Uncollected</p>
-            </div>
+          <div id="rectangle_282">
+            <p style={{marginLeft: 50, marginTop:5, fontSize: '1.1em', fontWeight: 500}}>Uncollected</p>
           </div>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-            <div id="rectangle_283">
-              <p style={{marginLeft: 50, marginTop:5,fontSize: '1.1em', fontWeight: 500 }}>Collected</p>
-            </div>
+          <div id="rectangle_283">
+            <p style={{marginLeft: 50, marginTop:5,fontSize: '1.1em', fontWeight: 500 }}>Collected</p>
           </div>
+        </div>
         <div id="uncollected"></div>
         <div id="collected"></div>
           <div id="line"> </div>
       </div>
     );
   }
+  
   
 
   return (

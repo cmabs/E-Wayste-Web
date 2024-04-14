@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import '../styleSheet/schedTabStyle.css';
 import { db } from '../firebase-config';
-import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
+import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
 import AddSchedModal from "../Modals/AddSched";
 
   export default function Schedule() {
@@ -67,8 +67,7 @@ import AddSchedModal from "../Modals/AddSched";
       fetchDataByType('Assignment', setAssignmentsData);
     }, []);
     
-    
-    useEffect(() => {
+
       const fetchScheduleData = async () => {
         try {
           const scheduleCollection = collection(db, 'schedule');
@@ -81,7 +80,6 @@ import AddSchedModal from "../Modals/AddSched";
       };
 
       fetchScheduleData();
-    }, []);
 
     const handleAllSchedulesButtonClick = async () => {
       try {
@@ -113,7 +111,7 @@ import AddSchedModal from "../Modals/AddSched";
         const filteredData = data.filter(schedule => {
           const collectionRouteIncludesUserMunicipality = schedule.collectionRoute && schedule.collectionRoute.coordinates.some(coord => coord.locationName && coord.locationName.includes(loggedInUserMunicipality));
           return collectionRouteIncludesUserMunicipality;
-        });
+        }); 
         setCollectionSchedules(filteredData);
         setShowCollectionTable(true); 
         setShowEventsTable(false);
@@ -163,6 +161,32 @@ import AddSchedModal from "../Modals/AddSched";
         console.error('Error fetching assignments data:', error);
       }
     };
+
+    const deleteSchedule = async (id) => {
+      try {
+        const scheduleRef = doc(db, 'schedule', id);
+        await deleteDoc(scheduleRef);
+    
+        if (showAllScheduleTable) {
+          const updatedAllSchedulesData = allSchedulesData.filter(schedule => schedule.id !== id);
+          setAllSchedulesData(updatedAllSchedulesData);
+        } else if (showCollectionTable) {
+          const updatedCollectionSchedules = collectionSchedules.filter(schedule => schedule.id !== id);
+          setCollectionSchedules(updatedCollectionSchedules);
+        } else if (showEventsTable) {
+          const updatedEventsData = eventsData.filter(schedule => schedule.id !== id);
+          setEventsData(updatedEventsData);
+        } else if (showAssignmentsTable) {
+          const updatedAssignmentsData = assignmentsData.filter(schedule => schedule.id !== id);
+          setAssignmentsData(updatedAssignmentsData);
+        }
+        fetchScheduleData();
+        window.alert('Schedule successfully deleted');
+      } catch (error) {
+        console.error('Error deleting schedule:', error);
+      }
+    };
+    
 
     const handleAddSchedClick = () => {
       setIsModalOpen(true);
@@ -256,15 +280,15 @@ import AddSchedModal from "../Modals/AddSched";
                 {allSchedulesData.length > 0 && (
                   <table style={{ marginTop: 20, borderCollapse: 'collapse', width: '100%' }}>
                     <thead>
-                      <tr>
-                        <th>Type</th>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Location</th>
-                        <th>Assigned Driver</th>
-                        <th>Action</th>
-                      </tr>
+                    <tr>
+                      <th style={{ width: '10%' }}>Type</th>
+                      <th style={{ width: '15%' }}>Description</th>
+                      <th style={{ width: '10%' }}>Date</th>
+                      <th style={{ width: '10%' }}>Time</th>
+                      <th style={{ width: '25%' }}>Location</th>
+                      <th style={{ width: '12%' }}>Assigned Driver/Truck</th>
+                      <th style={{ width: '8%' }}>Action</th>
+                    </tr>
                     </thead>
                     <tbody>
                       {allSchedulesData.map(schedule => (
@@ -278,10 +302,10 @@ import AddSchedModal from "../Modals/AddSched";
                             {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
                               getRouteLocationNames(schedule.collectionRoute.coordinates)}
                           </td>
-                          <td>{schedule.assignCollector || 'N/A'}</td>
+                          <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
-                            <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
+                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
+                            <MdDelete style={{ fontSize: '24px', color: 'red' }}  onClick={() => deleteSchedule(schedule.id)}/> 
                           </td>
                         </tr>
                       ))}
@@ -296,12 +320,12 @@ import AddSchedModal from "../Modals/AddSched";
                   <table style={{ marginTop: 20, borderCollapse: 'collapse', width: '100%' }}>
                     <thead>
                       <tr>
-                        <th>Description</th>
+                        <th style={{ width: '15%' }}>Description</th>
                         <th>Date</th>
                         <th>Time</th>
-                        <th>Collection Route</th>
-                        <th>Assigned Driver</th>
-                        <th>Action</th>
+                        <th style={{ width: '45%' }}>Collection Route</th>
+                        <th style={{ width: '10%' }}>Assigned Driver/Truck</th>
+                        <th style={{ width: '9%' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -310,11 +334,22 @@ import AddSchedModal from "../Modals/AddSched";
                           <td>{schedule.description}</td>
                           <td>{schedule.selectedDate}</td>
                           <td>{schedule.startTime}</td>
-                          <td>{getRouteLocationNames(schedule.collectionRoute.coordinates)}</td>
-                          <td>{schedule.assignCollector}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
-                            <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
+                          {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
+                            <div>
+                              {schedule.collectionRoute.coordinates.map((coord, index) => (
+                                <div key={index}>
+                                  <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                  {coord.locationName}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td> {/* Modified line */}
+                          <td>
+                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} />
+                            <MdDelete style={{ fontSize: '24px', color: 'red' }}  onClick={() => deleteSchedule(schedule.id)}/>
                           </td>
                         </tr>
                       ))}
@@ -329,12 +364,12 @@ import AddSchedModal from "../Modals/AddSched";
                   <table style={{ marginTop: 20, borderCollapse: 'collapse', width: '100%' }}>
                     <thead>
                       <tr>
-                        <th>Title</th>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Location</th>
-                        <th>Action</th>
+                        <th style={{ width: '15%' }}>Title</th>
+                        <th style={{ width: '15%' }}>Description</th>
+                        <th style={{ width: '10%' }}>Date</th>
+                        <th style={{ width: '10%' }}>Time</th>
+                        <th style={{ width: '40%' }}>Location</th>
+                        <th style={{ width: '10%' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -347,7 +382,7 @@ import AddSchedModal from "../Modals/AddSched";
                           <td>{event.location}</td>
                           <td>
                             <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
-                            <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
+                            <MdDelete style={{ fontSize: '24px', color: 'red' }} onClick={() => deleteSchedule(event.id)} /> {/* Delete icon */}
                           </td>
                         </tr>
                       ))}
@@ -362,12 +397,12 @@ import AddSchedModal from "../Modals/AddSched";
                   <table style={{ marginTop: 20, borderCollapse: 'collapse', width: '100%' }}>
                     <thead>
                       <tr>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Location</th>
-                        <th>Assigned Driver</th>
-                        <th>Action</th>
+                        <th style={{ width: '25%' }}>Description</th>
+                        <th style={{ width: '10%' }}>Date</th>
+                        <th style={{ width: '10%' }}>Time</th>
+                        <th style={{ width: '30%' }}>Location</th>
+                        <th style={{ width: '15%' }}>Assigned Driver</th>
+                        <th style={{ width: '10%' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -376,11 +411,11 @@ import AddSchedModal from "../Modals/AddSched";
                           <td>{assignment.description}</td>
                           <td>{assignment.selectedDate}</td>
                           <td>{assignment.startTime}</td>
-                          <td>{assignment.location}</td>
-                          <td>{assignment.assignCollector}</td>
+                          <td>{assignment.location}</td>  
+                          <td>{assignment.assignCollector || assignment.assignedTruck || 'N/A'}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
-                            <MdDelete style={{ fontSize: '24px', color: 'red' }} /> {/* Delete icon */}
+                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
+                            <MdDelete style={{ fontSize: '24px', color: 'red' }} onClick={() => deleteSchedule(assignment.id)} /> {/* Delete icon */}
                           </td>
                         </tr>
                       ))}

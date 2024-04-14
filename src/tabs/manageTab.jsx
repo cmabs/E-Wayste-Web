@@ -4,7 +4,7 @@ import { navigate } from "react-router-dom";
 import { db, storage } from '../firebase-config';
 import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, query, where, } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AddTruckModal from "../Modals/AddTruck";
 import EditTruckModal from '../Modals/EditTruck';
 
@@ -19,6 +19,7 @@ export default function UserManage() {
   const [lguCode, setLguCode] = useState("");
   const [currentUser, setCurrentUser] = useState("");
   const [currentUserLguCode, setCurrentUserLguCode] = useState(""); 
+  const [currentUserMunicipality, setCurrentUserMunicipality] = useState(""); 
 
   let imageURL, viewImageURL;
   const [userLicense, setUserLicense] = useState([]);
@@ -41,20 +42,17 @@ export default function UserManage() {
       const auth = getAuth();
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-          // User is signed in
           const email = user.email;
   
-          // Fetch user data from 'users' collection based on email
           const firestore = getFirestore();
           const usersCollection = collection(firestore, 'users');
           const querySnapshot = await getDocs(query(usersCollection, where('email', '==', email)));
   
           if (!querySnapshot.empty) {
-            // Assuming email is unique, there should be only one user
             const userData = querySnapshot.docs[0].data();
             const userLguCode = userData.lguCode;
-  
-            // Set the user's LGU code in state
+            const userMunicipality = userData.municipality;
+            setCurrentUserMunicipality(userMunicipality);
             setCurrentUserLguCode(userLguCode);
           }
         }
@@ -64,7 +62,6 @@ export default function UserManage() {
     }
   };
   
-  // Call the function when the component mounts
   useEffect(() => {
     fetchLoggedInUserLguCode();
   }, []);
@@ -73,10 +70,9 @@ export default function UserManage() {
     try {
       const firestore = getFirestore();
       const trucksCollection = collection(firestore, 'trucks');
-      const trucksSnapshot = await getDocs(trucksCollection);
+      const trucksSnapshot = await getDocs(query(trucksCollection, where('lguCode', '==', currentUserLguCode)));
       const trucksData = trucksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   
-      // Sort the trucks based on the dateTime field in descending order
       const sortedTrucks = trucksData.sort((a, b) => b.dateTime - a.dateTime);
       
       setTrucks(sortedTrucks);
@@ -85,7 +81,6 @@ export default function UserManage() {
     }
   };
   
-  // Call fetchTrucks function when component mounts
   useEffect(() => {
     if (selectedSection === 'trucks' && isTruckOpen) {
       fetchTrucks();
@@ -126,7 +121,7 @@ export default function UserManage() {
   const handleEditTruck = (truck) => {
     setSelectedTruck(truck);
     setIsEditTruckOpen(true);
-    console.log('Truck ID to be edited:', truck.id); // Console log the truck ID
+    console.log('Truck ID to be edited:', truck.id);
   };
 
   const handleDeleteTruck = async (truckId) => {
@@ -135,14 +130,13 @@ export default function UserManage() {
       const truckRef = doc(firestore, 'trucks', truckId);
       await deleteDoc(truckRef);
       console.log('Truck deleted successfully!');
-      fetchTrucks(); // Optionally, you may fetch trucks again to update the UI
+      fetchTrucks(); 
     } catch (error) {
       console.error('Error deleting truck:', error);
     }
   };
   
   
-
   const renderTableContent = () => {
     if (isPendingUsers) {
       return null; // Return null when Pending Users is active
@@ -182,13 +176,10 @@ export default function UserManage() {
         </table>
       );
     } else if (selectedSection === "trucks" && isTruckOpen) {
-      //const sortedTrucks = trucks.sort((a, b) => b.dateTime - a.dateTime);
-
       return (
         <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
           <thead>
             <tr>
-              <th>Truck No.</th>
               <th>Plate No.</th>
               <th>Driver Name</th>
               <th>Collector/s</th> 
@@ -196,10 +187,9 @@ export default function UserManage() {
             </tr>
           </thead>
           <tbody className="reportTableBody">
-            {trucks.map((truck, index) => {
+            {trucks.map((truck) => {
               return (
                 <tr key={truck.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-                  <td style={{ borderRight: '1px solid #ddd' }}>{index + 1}</td>
                   <td style={{ borderRight: '1px solid #ddd' }}>{truck.plateNo}</td>
                   <td style={{ borderRight: '1px solid #ddd' }}>{getDriverName(truck.driverID)}</td>
                   <td style={{ borderRight: '1px solid #ddd' }}>{getCollectorNames(truck.members)}</td>
@@ -239,7 +229,7 @@ export default function UserManage() {
   const fetchUsers = async () => {
     try {
       const firestore = getFirestore();
-      let usersCollection;
+      const usersCollection = collection(firestore, 'users');
   
       if (isPendingUsers) {
         const q = query(collection(firestore, 'pendingUsers'), where('lguCode', '==', currentUserLguCode));
@@ -247,32 +237,22 @@ export default function UserManage() {
         const pendingUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setUsers(pendingUsers);
         return;
-      } else {
-        usersCollection = collection(firestore, 'users');
-  
-        if (selectedSection === 'collector') {
-          const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'), where('lguCode', '==', currentUserLguCode));
-          const usersSnapshot = await getDocs(q);
-          const filteredUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-          setUsers(filteredUsers);
-          return;
-        }
       }
   
-      const usersSnapshot = await getDocs(usersCollection);
-      const usersData = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setUsers(usersData);
+      const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'), where('municipality', '==', currentUserMunicipality), where('lguCode', '==', currentUserLguCode));
+      const usersSnapshot = await getDocs(q);
+      const filteredUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUsers(filteredUsers);
     } catch (error) {
       console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
     }
   };
   
-  
-  
   useEffect(() => {
     console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
     fetchUsers();
-  }, [isPendingUsers]);
+  }, [isPendingUsers, currentUserMunicipality, currentUserLguCode]);
+
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -303,24 +283,20 @@ export default function UserManage() {
     event.preventDefault();
     try {
       const firestore = getFirestore();
-      const auth = getAuth();
-  
+      
       const pendingUserRef = doc(firestore, 'pendingUsers', userId);
       const pendingUserSnapshot = await getDoc(pendingUserRef);
-  
+      
       if (pendingUserSnapshot.exists()) {
         const userData = pendingUserSnapshot.data();
-        const { email, password } = userData; // You need to have a password for the user
-        await createUserWithEmailAndPassword(auth, email, password);
-  
-        // Remove user from pendingUsers collection
-        await deleteDoc(pendingUserRef);
-  
-        // Update the users collection with the approved user data
+        
         const usersCollection = collection(firestore, 'users');
         await addDoc(usersCollection, userData);
-  
+        
+        await deleteDoc(pendingUserRef);
+        
         console.log('User approved successfully!');
+      
         fetchUsers();
       } else {
         console.error('User not found in pendingUsers collection.');
@@ -329,7 +305,9 @@ export default function UserManage() {
       console.error('Error approving user:', error);
     }
   };
-
+  
+  
+  
   const handleRejectUser = async (event, userId) => {
     event.preventDefault();
 
@@ -349,7 +327,6 @@ export default function UserManage() {
     setAddTruckOpen(!isAddTruckOpen);
   }
   
-
   function UserListContent() {
     if (!isUsersListOpen) {
       return null; 
@@ -462,3 +439,4 @@ export default function UserManage() {
     </>
   );
 }
+
