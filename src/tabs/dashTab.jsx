@@ -9,8 +9,6 @@ export default function Dashboard() {
   const [users, setUsers] = useState([]);
   const [generalUsersReports, setGeneralUsersReports] = useState([]);
   const [totalCollectors, setTotalCollectors] = useState(0);
-  const [totalLGUs, setTotalLGUs] = useState(0);
-  const [loggedInUser, setLoggedInUser] = useState(null); // Define loggedInUser state
   const [loggedInUserLguCode, setLoggedInUserLguCode] = useState(null);
   const [totalCollected, setTotalCollected] = useState(0);
   const [totalUncollected, setTotalUncollected] = useState(0);

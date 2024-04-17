@@ -191,6 +191,9 @@ border-radius: 20px;
 
 .colschedule-table {
   margin-top: 20px;
+  overflow-y: auto; /* Add vertical scrollbar if content overflows */
+  max-height: 400px; 
+  margin-bottom: 50px;
 }
 
 .colschedule-table table {  
@@ -221,6 +224,9 @@ border-radius: 20px;
 
 .events-table {
   margin-top: 20px;
+  overflow-y: auto; /* Add vertical scrollbar if content overflows */
+  max-height: 400px; 
+  margin-bottom: 50px;
 }
 
 .events-table table {  
@@ -264,6 +270,9 @@ border-radius: 20px;
 
 .assignments-table {
   margin-top: 20px;
+  overflow-y: auto; /* Add vertical scrollbar if content overflows */
+  max-height: 400px; 
+  margin-bottom: 50px;
 }
 
 .assignments-table table {  
@@ -308,6 +317,9 @@ border-radius: 20px;
 
 .allschedule-table {
   margin-top: 20px;
+  overflow-y: auto; /* Add vertical scrollbar if content overflows */
+  max-height: 400px; 
+  margin-bottom: 50px;
 }
 
 .allschedule-table table {  
@@ -347,6 +359,19 @@ border-radius: 20px;
 .allschedule-table .action-icons svg:hover {
   opacity: 0.8;
 }
+
+.allschedule-table::-webkit-scrollbar {
+  width: 5px;
+}
+.allschedule-table:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(170, 170, 170);
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
+.allschedule-table::-webkit-scrollbar-thumb:active {
+  background-color:  rgb(170, 170, 170);
+}
+
 /*modal*/
 .add-sched-modal {
   position: absolute;
@@ -452,4 +477,60 @@ border-radius: 20px;
   font-size: 20px;
 }
 
+.events-table::-webkit-scrollbar {
+  width: 5px;
+}
+
+.events-table::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 5px;
+}
+
+.events-table:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(170, 170, 170);
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
+
+.events-table::-webkit-scrollbar-thumb:active {
+  background-color: rgb(170, 170, 170);
+}
+
+.assignments-table::-webkit-scrollbar {
+  width: 5px;
+}
+
+.assignments-table::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 5px;
+}
+
+.assignments-table:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(170, 170, 170);
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
+
+.assignments-table::-webkit-scrollbar-thumb:active {
+  background-color: rgb(170, 170, 170);
+}
+
+.colschedule-table::-webkit-scrollbar {
+  width: 5px;
+}
+
+.colschedule-table::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 5px;
+}
+
+.colschedule-table:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(170, 170, 170);
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
+
+.colschedule-table::-webkit-scrollbar-thumb:active {
+  background-color: rgb(170, 170, 170);
+}
 

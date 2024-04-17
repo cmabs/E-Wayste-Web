@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getFirestore, collection, getDocs, getDoc, doc, query, updateDoc, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
+import { FaMapMarkerAlt, FaTimes} from 'react-icons/fa'; 
 import "../styleSheet/schedTabStyle.css";
-import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api'; // Import the necessary components
-import { FaMapMarkerAlt, FaTimes} from 'react-icons/fa'; // Import the Map Marker icon from react-icons/fa
-import moment from 'moment';
+import moment from "moment";
 
 const libraries = ["places"];
 const mapContainerStyle = {
@@ -26,7 +26,7 @@ export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId
   const [longitude, setLongitude] = useState(""); 
   const [locations, setLocations] = useState([]); 
   const [collectionRoute, setCollectionRoute] = useState({ coordinates: [] }); 
-  const autocompleteRef = useRef(null); // Define the autocompleteRef
+  const autocompleteRef = useRef(null); 
 
   useEffect(() => {
     const fetchScheduleData = async () => {
@@ -67,8 +67,7 @@ export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId
       try {
         const auth = getAuth();
         const user = auth.currentUser;
-        
-        // Check if user is logged in
+      
         if (user) {
           const userEmail = user.email;
           const db = getFirestore();
@@ -100,7 +99,6 @@ export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId
                 console.log(`Driver not found for truck with plateNo: ${truck.plateNo}`);
               }
             }
-  
             setGarbageTrucks(trucksData);
           } else {
             console.log("User document not found");
@@ -254,7 +252,7 @@ export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId
                     placeholder="Enter location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    style={{ width: 'calc(78% - 50px)', marginRight: '-2px' }} // Adjust width and add right margin
+                    style={{ width: 'calc(78% - 50px)', marginRight: '-2px' }} 
                   />
                   <button className="add-location-button" onClick={handleAddLocation}>+</button>
                 </>
@@ -264,7 +262,7 @@ export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId
                     <div key={index} className="selected-location">
                       <span className="location-icon" style={{ color: 'red' }}><FaMapMarkerAlt /></span> 
                       <span>{location.locationName}</span> 
-                      <span className="remove-location" onClick={() => handleRemoveLocation(index)}><FaTimes /></span> {/* Use the Times icon for removal */}
+                      <span className="remove-location" onClick={() => handleRemoveLocation(index)}><FaTimes /></span>
                     </div>
                   ))}
                 </div>
@@ -275,7 +273,14 @@ export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId
             {selectedType === "Assignment" && (
               <>
                 <input type="text" placeholder="Description" value={description} onChange={handleDescriptionChange} />
-                <input type="text" placeholder="Assigned Truck" value={selectedTruck} onChange={(e) => setSelectedTruck(e.target.value)} />
+                <select id="assignedTruck" value={selectedTruck} onChange={handleTruckChange}>
+                  <option value="">Select Garbage Truck</option>
+                  {garbageTrucks.map(truck => (
+                    <option key={truck.id} value={truck.plateNo}>
+                      {`${truck.plateNo} [Driver: ${truck.driverFirstName} ${truck.driverLastName}]`}
+                    </option>
+                  ))}
+                </select>                
                 <Autocomplete
                   onLoad={(autocomplete) => {
                     console.log('Autocomplete loaded:', autocomplete);

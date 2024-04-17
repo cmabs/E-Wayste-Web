@@ -193,7 +193,7 @@ export default function AddSchedModal({ isOpen, handleClose }) {
           alert("Please select a garbage truck.");
           return;
         }
-        if (collectionRoute.coordinates.length === 0) {
+        if (selectedType === "Collection" && collectionRoute.coordinates.length === 0) {
           alert("Please add at least one location for collection.");
           return;
         }

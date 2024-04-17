@@ -260,7 +260,7 @@ import EditSchedModal from "../Modals/EditSched"; // Import EditSchedModal
                   </div>
                 </div>
               </button>
-              <button className="events" onClick={handleEventsButtonClick} style={{ width: '20%' }}>
+              <button className="events" onClick={handleEventsButtonClick} style={{ width: '10%' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>Events</p>

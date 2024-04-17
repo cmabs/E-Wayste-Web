@@ -9,10 +9,10 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const auth = getAuth(); // Initialize Firebase Auth
+  const auth = getAuth(); 
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent the form from submitting the traditional way
+    e.preventDefault(); 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -20,8 +20,8 @@ export default function Login() {
       localStorage.setItem('userId', user.uid);
 
       console.log('Logged in successfully!');
-      console.log('User UID:', user.uid); // Use user UID here as needed
-      navigate('/Home'); // Navigate to the Home page
+      console.log('User UID:', user.uid); 
+      navigate('/Home');
       
     } catch (error) {
       console.error('Error logging in: ', error);
@@ -61,7 +61,6 @@ export default function Login() {
                 required="required"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                //placeholder="Email"
               />
               <p>Email</p>
               <i></i>
@@ -72,7 +71,6 @@ export default function Login() {
                 required="required"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                //placeholder="Password"
               />
               <p>Password</p>
               <i></i>
