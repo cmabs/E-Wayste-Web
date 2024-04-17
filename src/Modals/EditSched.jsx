@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getFirestore, collection, getDocs, getDoc, doc, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, getDoc, doc, query, updateDoc, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import "../styleSheet/schedTabStyle.css";
 import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api'; // Import the necessary components
@@ -12,93 +12,113 @@ const mapContainerStyle = {
   height: '200px',
 };
 
-export default function EditSchedModal({ isOpen, handleClose, scheduleData }) {
-    const [selectedType, setSelectedType] = useState(scheduleData?.type || ""); 
-const [selectedTruck, setSelectedTruck] = useState(scheduleData?.assignedTruck || ""); 
-const [location, setLocation] = useState(scheduleData?.location || ""); 
-const [selectedDate, setSelectedDate] = useState(scheduleData?.selectedDate || ""); 
-const [startTime, setStartTime] = useState(scheduleData?.startTime || ""); 
-const [description, setDescription] = useState(scheduleData?.description || "");
-const [title, setTitle] = useState(scheduleData?.title || "");
-const [latitude, setLatitude] = useState(scheduleData?.latitude || ""); 
-const [longitude, setLongitude] = useState(scheduleData?.longitude || ""); 
-const [locations, setLocations] = useState(scheduleData?.collectionRoute.coordinates || []); 
-const [collectionRoute, setCollectionRoute] = useState(scheduleData?.collectionRoute || { coordinates: [] }); 
-
-    const [currentUserLguCode, setCurrentUserLguCode] = useState("");
-const [userData, setUserData] = useState("");
-const [garbageTrucks, setGarbageTrucks] = useState([]);
-
-
-  const autocompleteRef = useRef(null); 
-  const db = getFirestore();
-
-  const fetchLoggedInUserLguCode = async () => {
-    try {
-      const auth = getAuth();
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const email = user.email;
-          const firestore = getFirestore();
-          const usersCollection = collection(firestore, 'users');
-          const querySnapshot = await getDocs(query(usersCollection, where('email', '==', email)));
-
-          if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            const userLguCode = userData.lguCode;
-          
-            setCurrentUserLguCode(userLguCode);
-
-            const userID = querySnapshot.docs[0].id;
-            setUserData({ ...userData, userID });
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching logged-in user data:', error);
-    }
-  };
-  useEffect(() => {
-    fetchLoggedInUserLguCode();
-  }, []);
+export default function EditSchedModal({ isOpen, handleClose, selectedScheduleId }) {
+  const [scheduleData, setScheduleData] = useState(null);
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedTruck, setSelectedTruck] = useState(""); 
+  const [garbageTrucks, setGarbageTrucks] = useState([])
+  const [location, setLocation] = useState(""); 
+  const [selectedDate, setSelectedDate] = useState(""); 
+  const [startTime, setStartTime] = useState(""); 
+  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState("");
+  const [latitude, setLatitude] = useState(""); 
+  const [longitude, setLongitude] = useState(""); 
+  const [locations, setLocations] = useState([]); 
+  const [collectionRoute, setCollectionRoute] = useState({ coordinates: [] }); 
+  const autocompleteRef = useRef(null); // Define the autocompleteRef
 
   useEffect(() => {
-    const fetchTrucks = async () => {
+    const fetchScheduleData = async () => {
       try {
         const db = getFirestore();
-        const trucksCollection = collection(db, 'trucks');
-        const trucksQuery = query(trucksCollection, where('lguCode', '==', currentUserLguCode));
-        const trucksSnapshot = await getDocs(trucksQuery);
-        const trucksData = trucksSnapshot.docs.map(doc => ({
-          id: doc.id,
-          plateNo: doc.data().plateNo,
-          driverID: doc.data().driverID,
-          driverFirstName: '', 
-          driverLastName: '', 
-        }));
-
-        for (const truck of trucksData) {
-          const driverDoc = await getDoc(doc(collection(db, 'users'), truck.driverID));
-          if (driverDoc.exists()) {
-            const driverData = driverDoc.data();
-            truck.driverFirstName = driverData.firstName;
-            truck.driverLastName = driverData.lastName;
-          } else {
-            console.log(`Driver not found for truck with plateNo: ${truck.plateNo}`); // Add this line for debugging
-          }
+        const scheduleDocRef = doc(db, 'schedule', selectedScheduleId);
+        const scheduleDocSnapshot = await getDoc(scheduleDocRef);
+        if (scheduleDocSnapshot.exists()) {
+          const scheduleData = scheduleDocSnapshot.data();
+          setScheduleData(scheduleData);
+          setSelectedType(scheduleData.type);
+          setSelectedTruck(scheduleData.assignedTruck);
+          setLocation(scheduleData.location);
+          setSelectedDate(scheduleData.selectedDate);
+          const startTime24Hour = moment(scheduleData.startTime, 'hh:mm A').format('HH:mm');
+          setStartTime(startTime24Hour);
+          setDescription(scheduleData.description);
+          setTitle(scheduleData.title);
+          setLocations(scheduleData.collectionRoute.coordinates);
+          setCollectionRoute(scheduleData.collectionRoute);
+          setLatitude(scheduleData.latitude);
+          setLongitude(scheduleData.longitude);
+        } else {
+          console.log("Schedule not found");
         }
-
-        setGarbageTrucks(trucksData);
       } catch (error) {
-        console.error("Error fetching trucks:", error);
+        console.error("Error fetching schedule data:", error);
       }
     };
 
-    if(currentUserLguCode) {
-      fetchTrucks();
+    if (isOpen && selectedScheduleId) {
+      fetchScheduleData();
     }
-  }, [currentUserLguCode]);
+  }, [isOpen, selectedScheduleId]);
+
+  useEffect(() => {
+    const fetchGarbageTrucks = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        
+        // Check if user is logged in
+        if (user) {
+          const userEmail = user.email;
+          const db = getFirestore();
+          const usersCollection = collection(db, 'users');
+          const querySnapshot = await getDocs(query(usersCollection, where("email", "==", userEmail)));
+          
+          if (!querySnapshot.empty) {
+            const userData = querySnapshot.docs[0].data();
+            const lguCode = userData.lguCode;
   
+            const trucksCollection = collection(db, 'trucks');
+            const trucksQuerySnapshot = await getDocs(query(trucksCollection, where("lguCode", "==", lguCode)));
+            
+            const trucksData = trucksQuerySnapshot.docs.map(doc => ({
+              id: doc.id,
+              plateNo: doc.data().plateNo,
+              driverID: doc.data().driverID,
+              driverFirstName: '', 
+              driverLastName: '', 
+            }));
+  
+            for (const truck of trucksData) {
+              const driverDoc = await getDoc(doc(collection(db, 'users'), truck.driverID));
+              if (driverDoc.exists()) {
+                const driverData = driverDoc.data();
+                truck.driverFirstName = driverData.firstName;
+                truck.driverLastName = driverData.lastName;
+              } else {
+                console.log(`Driver not found for truck with plateNo: ${truck.plateNo}`);
+              }
+            }
+  
+            setGarbageTrucks(trucksData);
+          } else {
+            console.log("User document not found");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching garbage trucks:", error);
+      }
+    };
+  
+    fetchGarbageTrucks();
+  }, []);
+  
+  const formatTime = (time) => {
+    const date = new Date(`1970-01-01T${time}`);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
   const handleDescriptionChange = (e) => {
     setDescription(e.target.value);
   };
@@ -107,7 +127,7 @@ const [garbageTrucks, setGarbageTrucks] = useState([]);
     setSelectedType(e.target.value);
   };
 
-  const handleTruckChange = async (e) => {
+  const handleTruckChange = (e) => {
     setSelectedTruck(e.target.value);
   };
 
@@ -134,8 +154,7 @@ const [garbageTrucks, setGarbageTrucks] = useState([]);
     } else {
       alert("Please select a location properly.");
     }
-  };
-     
+  };   
 
   const handleRemoveLocation = (indexToRemove) => {
     const updatedLocations = locations.filter((_, index) => index !== indexToRemove);
@@ -162,109 +181,35 @@ const [garbageTrucks, setGarbageTrucks] = useState([]);
       console.log("Latitude:", lat);
       console.log("Longitude:", lng);
     }
-  };  
+  }; 
 
-  const formatTime = (time) => {
-    const date = new Date(`1970-01-01T${time}`);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const generateUniqueScheduleID = () => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let scheduleID = '';
-  
-    for (let i = 0; i < 10; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      scheduleID += characters.charAt(randomIndex);
-    }
-  
-    return scheduleID;
-  };  
-
-  const handleSave = async () => {
+  const handleSaveChanges = async () => {
     try {
       const formattedStartTime = formatTime(startTime);
       const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD hh:mm:ss a');
-      
-      if (!selectedType) {
-        alert("Please select a schedule type.");
-        return;
-      }
-      if (selectedType === "Collection") {
-        if (!selectedTruck) {
-          alert("Please select a garbage truck.");
-          return;
-        }
-        if (collectionRoute.coordinates.length === 0) {
-          alert("Please add at least one location for collection.");
-          return;
-        }
-        if (collectionRoute.coordinates.some(coord => !coord.latitude || !coord.longitude)) {
-          alert("Please select locations properly.");
-          return;
-        }
-      } else {
-        if (!selectedTruck) {
-          alert("Please select a garbage truck.");
-          return;
-        }
-        if (!location) {
-          alert("Please enter a location.");
-          return;
-        }
-        if (!latitude || !longitude) {
-          alert("Please select a location properly.");
-          return;
-        }
-      }
-  
-      let scheduleData = {
+
+      const db = getFirestore();
+      const scheduleDocRef = doc(db, 'schedule', selectedScheduleId);
+      await updateDoc(scheduleDocRef, {
+        type: selectedType,
         assignedTruck: selectedTruck,
         dateTimeUploaded: fullDateTime,
-        description: description || 'N/A',
-        title: title || 'N/A',
+        location,
         selectedDate,
         startTime: formattedStartTime,
-        type: selectedType,
-        userID: userData ? userData.userID : null, 
-        collectionRoute: collectionRoute 
-      };
-  
-      if (selectedType !== "Collection") {
-        scheduleData = {
-          ...scheduleData,
-          location: location,
-          latitude: latitude,
-          longitude: longitude,
-        };
-      } else {
-        scheduleData = {
-          ...scheduleData,
-          location: "",
-          latitude: "",
-          longitude: "",
-        };
-      }
-  
-      await addDoc(collection(db, 'schedule'), scheduleData);
-      alert("Schedule successfully added!");
-  
-      setSelectedType("");
-      setSelectedTruck("");
-      setLocation("");
-      setSelectedDate("");
-      setStartTime("");
-      setDescription("");
-      setLocations([]);
-      setCollectionRoute({ coordinates: [] });
+        description,
+        title,
+        latitude,
+        longitude,
+        collectionRoute,
+      });
+      alert("Changes saved successfully!");
+      handleClose();
     } catch (error) {
-      console.error("Error saving schedule:", error);
+      console.error("Error saving changes:", error);
     }
   };
-  
-  
-  
-  
+
   return (
     <>
       {isOpen && (
@@ -287,12 +232,12 @@ const [garbageTrucks, setGarbageTrucks] = useState([]);
             {selectedType === "Collection" && (
               <>
                 <input type="text" placeholder="Description" value={description} onChange={handleDescriptionChange} />
-                <select value={selectedTruck} onChange={handleTruckChange}>
+                <select id="assignedTruck" value={selectedTruck} onChange={handleTruckChange}>
                   <option value="">Select Garbage Truck</option>
-                    {garbageTrucks.map(truck => (
-                      <option key={truck.id} value={truck.plateNo}>
+                  {garbageTrucks.map(truck => (
+                    <option key={truck.id} value={truck.plateNo}>
                       {`${truck.plateNo} [Driver: ${truck.driverFirstName} ${truck.driverLastName}]`}
-                  </option>
+                    </option>
                   ))}
                 </select>
                 <Autocomplete
@@ -330,14 +275,7 @@ const [garbageTrucks, setGarbageTrucks] = useState([]);
             {selectedType === "Assignment" && (
               <>
                 <input type="text" placeholder="Description" value={description} onChange={handleDescriptionChange} />
-                <select value={selectedTruck} onChange={handleTruckChange}>
-                  <option value="">Select Garbage Truck</option>
-                  {garbageTrucks.map(truck => (
-                    <option key={truck.id} value={truck.plateNo}>
-                    {`${truck.plateNo} [Driver: ${truck.driverFirstName} ${truck.driverLastName}]`}
-                  </option>
-                  ))}
-                </select>
+                <input type="text" placeholder="Assigned Truck" value={selectedTruck} onChange={(e) => setSelectedTruck(e.target.value)} />
                 <Autocomplete
                   onLoad={(autocomplete) => {
                     console.log('Autocomplete loaded:', autocomplete);
@@ -382,7 +320,7 @@ const [garbageTrucks, setGarbageTrucks] = useState([]);
             )}
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
               <button className="cancel" onClick={handleClose}>Cancel</button>
-              <button className="submit" onClick={handleSave}>Save</button>
+              <button className="submit" onClick={handleSaveChanges}>Save</button>
             </div>
           </div>
         </div>

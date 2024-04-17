@@ -188,7 +188,7 @@ export default function AddSchedModal({ isOpen, handleClose }) {
         alert("Please select a schedule type.");
         return;
       }
-      if (selectedType === "Collection") {
+      if (selectedType === "Collection" || selectedType === "Assignment") {
         if (!selectedTruck) {
           alert("Please select a garbage truck.");
           return;
@@ -202,10 +202,6 @@ export default function AddSchedModal({ isOpen, handleClose }) {
           return;
         }
       } else {
-        if (!selectedTruck) {
-          alert("Please select a garbage truck.");
-          return;
-        }
         if (!location) {
           alert("Please enter a location.");
           return;
