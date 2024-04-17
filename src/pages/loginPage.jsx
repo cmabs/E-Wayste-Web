@@ -4,6 +4,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebase-config";
 import "../styleSheet/registerPageStyle.css";
 import Logo from "../images/E-Wayste-logo.png";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,19 +17,38 @@ export default function Login() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-    
-      localStorage.setItem('userId', user.uid);
-
+  
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where("email", "==", user.email));
+      const querySnapshot = await getDocs(q);
+  
+      let allowedAccountType = false;
+      querySnapshot.forEach((doc) => {
+        if (doc.data().accountType === 'LGU / Waste Management Head') {
+          allowedAccountType = true;
+        }
+      });
+  
+      if (!allowedAccountType) {
+        console.log('User does not have the required account type.');
+        alert('You do not have permission to log in. Please contact an administrator.');
+        return; 
+      }
+      localStorage.setItem('userId', user.email);
       console.log('Logged in successfully!');
-      console.log('User UID:', user.uid); 
-      navigate('/Home');
-      
+      console.log('User Email:', user.email); 
+      try {
+        navigate('/Home');
+      } catch (navigationError) {
+        console.error('Error navigating to Home:', navigationError);
+        alert('Failed to navigate to Home page. Please try again.');
+      }
     } catch (error) {
       console.error('Error logging in: ', error);
       alert('Failed to log in. Please check your credentials.');
     }
   };
-
+  
   return (
     <>
       <div className="registerPage">

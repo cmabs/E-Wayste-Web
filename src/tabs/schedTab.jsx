@@ -5,7 +5,7 @@ import '../styleSheet/schedTabStyle.css';
 import { db } from '../firebase-config';
 import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
 import AddSchedModal from "../Modals/AddSched";
-import EditSchedModal from "../Modals/EditSched"; // Import EditSchedModal
+import EditSchedModal from "../Modals/EditSched"; 
 
   export default function Schedule() {
     const [scheduleData, setScheduleData] = useState([]);
@@ -20,8 +20,8 @@ import EditSchedModal from "../Modals/EditSched"; // Import EditSchedModal
     const [showAssignmentsTable, setShowAssignmentsTable] = useState(false); 
     const [showAllScheduleTable, setShowAllScheduleTable] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedScheduleId, setSelectedScheduleId] = useState(null); // New state to store the selected schedule ID for editing
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // New state to control the visibility of the EditSchedModal
+    const [selectedScheduleId, setSelectedScheduleId] = useState(null); 
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
 
     const scheduleCollection = collection(db, 'schedule');
 
