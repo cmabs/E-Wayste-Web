@@ -20,6 +20,9 @@
   border-radius: 20px;
   transition: transform 0.3s ease; /* Adding a smooth transition effect */
 }
+.schedule-Total:hover {
+  transform: scale(1.1); /* Zoom effect on hover */
+}
 
 .reportTable{
 background: #F6F6F6;
@@ -79,6 +82,8 @@ width: 1000px;
    border-radius: 5px;
    cursor: pointer;
 }
+
+
 .allschedules:hover{
   background-color: #1496ed
 }
@@ -333,6 +338,9 @@ border-radius: 20px;
 
 .allschedule-tabletr:hover {
   background-color: #ebfcde;
+}
+.highlight {
+  background-color:#51AF5B;
 }
 
 .allschedule-table .action-icons {

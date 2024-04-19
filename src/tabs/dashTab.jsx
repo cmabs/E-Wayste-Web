@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaBell } from 'react-icons/fa';
-import { getFirestore, collection, getDocs, query, where, Timestamp } from 'firebase/firestore'; 
+import { getFirestore, collection, getDocs } from 'firebase/firestore'; 
 import '../styleSheet/dashTabStyle.css';
 import { auth } from '../firebase-config';
 
@@ -9,6 +9,21 @@ export default function Dashboard() {
   const [generalUsersReports, setGeneralUsersReports] = useState([]);
   const [totalLGUs, setTotalLGUs] = useState(0);
   const [reportsToday, setReportsToday] = useState(0); 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+
+  const handleSearch = () => {
+    const filteredUsers = users.filter((user) => {
+        const name = `${user.firstName} ${user.lastName}`.toLowerCase();
+        const location = `${user.barangay}, ${user.municipality}, ${user.province}`.toLowerCase();
+        return name.includes(searchTerm.toLowerCase()) || location.includes(searchTerm.toLowerCase());
+    });
+    setFilteredUsers(filteredUsers);
+  };
+
+  useEffect(() => {
+    handleSearch(); // Call handleSearch whenever searchTerm changes
+  }, [searchTerm, users]); // Re-run the effect when searchTerm or users change
 
   const fetchUsers = async () => {
     try {
@@ -62,7 +77,7 @@ export default function Dashboard() {
     fetchGeneralUsersReports();
   }, []);
 
-  function UserListContent() {
+  function UserListContent({ users }) {
     return (
       <ul style={{ listStyleType: 'none', padding: 0 }}>
         {users.map((user, userID) => (
@@ -99,8 +114,17 @@ export default function Dashboard() {
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0 }}>Dashboard</h1>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
-              <input type="text" placeholder="Search" className="searchBar" />
-              <button className="searchButton"><FaSearch style={{ fontSize: 20 }} /></button>
+            <input
+                    type="text"
+                    placeholder="Search by name, or location"
+                    className="searchBar"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+                  <FaSearch style={{ fontSize: 20 }} />
+              </button>
+
             </div>
             <button className="notifIcon">
               <FaBell />
@@ -146,7 +170,7 @@ export default function Dashboard() {
               <p>Location</p>
             </div>
           </div>
-          {UserListContent()}
+          <UserListContent users={searchTerm ? filteredUsers : users} />
         </div>
       </div>
     </>

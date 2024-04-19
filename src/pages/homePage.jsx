@@ -7,7 +7,6 @@ import UserManage from "../tabs/manageTab";
 import Report from "../tabs/reportTab";
 import Map from "../tabs/mapTab";
 import Schedule from "../tabs/schedTab";
-import Newsfeed from "../tabs/newsfeedTab";
 import Profile from "../tabs/userProfile";
 import { RxDashboard } from 'react-icons/rx';
 import { MdPersonOutline, MdAccountCircle } from 'react-icons/md';
@@ -18,13 +17,15 @@ import { IoLogOutOutline } from 'react-icons/io5';
 import { MdLibraryBooks } from 'react-icons/md';
 import userlogo from '../images/userlogo.png'; 
 import { auth, db } from '../firebase-config';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore"; // Import needed Firestore functions
 
 export default function Home() {
   const [sideNavlink, setSideNavlink] = useState('option1');
   const [openTab, setOpenTab] = useState(<Dashboard />);
-  const [adminName, setAdminName] = useState("Admin Name");
   
   const navigate = useNavigate();
+
 
   const handleNavClick = (option) => {
       setSideNavlink(option);
@@ -55,6 +56,48 @@ export default function Home() {
   const handleLogout = () => { 
     navigate("/"); 
   };
+
+  const [userProfile, setUserProfile] = useState(null);
+    
+    const auth = getAuth();
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, fetch user profile
+                fetchUserProfile(user);
+            } else {
+                // No user is signed in, redirect to login
+                navigate("/login");
+            }
+        });
+
+        // Fetch user profile function moved inside useEffect
+        const fetchUserProfile = async (user) => {
+            try {
+                if (user) {
+                    const userEmail = user.email;
+                    const userRef = query(collection(db, "usersAdmin"), where('email', '==', userEmail));
+                    const querySnapshot = await getDocs(userRef);
+                    if (!querySnapshot.empty) {
+                        const doc = querySnapshot.docs[0];
+                        const { firstName, lastName } = doc.data();
+                        const displayName = `${firstName} ${lastName}`;
+                        setUserProfile({ displayName });
+                    } else {
+                        console.log("User profile not found");
+                    }
+                } else {
+                    console.log("No user is currently signed in");
+                }
+            } catch (error) {
+                console.error("Error fetching user profile:", error);
+            }
+        };
+
+        return () => unsubscribe(); // Cleanup subscription
+    }, [navigate]);
+
   
   return (
     <>
@@ -83,16 +126,15 @@ export default function Home() {
               <button className={sideNavlink === 'option5' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option5')}><BiCalendar style={{ fontSize: '1.5em' }} />Schedule</button>
             </div>
             <div className="divNavB">
-              <button className={sideNavlink === 'option7' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option6')}><MdAccountCircle style={{ fontSize: '1.5em' }} />User Profile</button>
+              <button className={sideNavlink === 'option6' ? 'activeB' : 'inactiveB'} onClick={() => handleNavClick('option6')}><MdAccountCircle style={{ fontSize: '1.5em' }} />User Profile</button>
             </div>
           </div>
-
           {/* Profile Section */}
           <div className="profileSection">
             <div className="profilePicture small">
-              <img src={userlogo} alt="user-logo" className="logoImage" onClick={() => { setSideNavlink('option7') }} />
+              <img src={userlogo} alt="user-logo" className="logoImage" onClick={() => { setSideNavlink('option6') }} />
             </div>
-            <p className="adminName">{adminName}</p>
+            <p className="adminName">{userProfile?.displayName || "Loading..."}</p>
             <button className="logoutButton" onClick={handleLogout}>
               <IoLogOutOutline />
             </button>
