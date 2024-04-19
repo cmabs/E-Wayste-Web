@@ -139,12 +139,37 @@ export default function Report() {
     };
 
     const handleSearch = () => {
-      const filtered = userReports.filter(item =>
-        (item.location && item.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.dateReported && item.dateReported.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const filtered = userReports.map(item => {
+        const location = item.location ? item.location.toLowerCase() : '';
+        const dateReported = item.dateReported ? item.dateReported.toLowerCase() : '';
+    
+        const searchTermLower = searchTerm.toLowerCase();
+    
+        if (location.includes(searchTermLower)) {
+          // Highlight the found text by wrapping it in a span with a background color
+          const startIndex = location.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedLocation = `${location.substring(0, startIndex)}<span class="highlight">${location.substring(startIndex, endIndex)}</span>${location.substring(endIndex)}`;
+          return { ...item, highlightedLocation };
+        } else if (dateReported.includes(searchTermLower)) {
+          // Highlight the found text by wrapping it in a span with a background color
+          const startIndex = dateReported.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedDate = `${dateReported.substring(0, startIndex)}<span class="highlight">${dateReported.substring(startIndex, endIndex)}</span>${dateReported.substring(endIndex)}`;
+          return { ...item, highlightedDate };
+        } else {
+          return null;
+        }
+      }).filter(item => item !== null);
+    
+      if (filtered.length === 0) {
+        // If no results found, show an alert
+        alert("No results found.");
+      }
       setFilteredReports(filtered);
     };
+    
+  
 
     const handleDelete = async (id) => {
       try {
@@ -284,7 +309,13 @@ export default function Report() {
         </td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatDateTime(item.dateTime)}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.location}</td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    {item.highlightedLocation ? (
+                      <span dangerouslySetInnerHTML={{ __html: item.highlightedLocation }}></span>
+                    ) : (
+                      item.location
+                    )}
+                  </td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                   {reportImage.map((url) => {
                   if(url.includes(item.associatedImage)) {

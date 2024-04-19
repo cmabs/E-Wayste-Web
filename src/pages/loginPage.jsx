@@ -1,53 +1,38 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebase-config";
 import "../styleSheet/registerPageStyle.css";
 import Logo from "../images/E-Wayste-logo.png";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const auth = getAuth(); // Initialize Firebase Auth
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevent the form from submitting the traditional way
     try {
-      const usersAdminQuery = query(
-        collection(db, "usersAdmin"),
-        where("username", "==", username),
-        where("password", "==", password)
-      );
-      const usersAdminSnapshot = await getDocs(usersAdminQuery);
-      
-      const lguQuery = query(
-        collection(db, "LGU"),
-        where("username", "==", username),
-        where("password", "==", password)
-      );
-      const lguSnapshot = await getDocs(lguQuery);
-  
-      const usersAdmin = usersAdminSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      const lguUsers = lguSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      const loggedInUser = usersAdmin.length > 0 ? usersAdmin[0] : lguUsers.length > 0 ? lguUsers[0] : null;
-  
-      if (!loggedInUser) {
-        alert("User not found. Please check your credentials.");
-        return;
+      const allowedDomain = ".com"; // Set your domain here
+
+      // Check if the entered email ends with the allowed domain
+      if (!email.endsWith(allowedDomain)) {
+        throw new Error('Email domain not allowed.');
       }
-  
-      console.log("Logged in successfully! User ID:", loggedInUser.id);
-      navigate("/Home");
+
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+    
+      localStorage.setItem('userId', user.uid);
+
+      console.log('Logged in successfully!');
+      console.log('User UID:', user.uid); // Use user UID here as needed
+      navigate('/Home'); // Navigate to the Home page
+      
     } catch (error) {
-      console.error("Error logging in: ", error);
-      alert("Failed to log in. Please check your credentials.");
+      console.error('Error logging in: ', error);
+      alert('Failed to log in. Please check your credentials.');
     }
   };
 
@@ -75,20 +60,27 @@ export default function Login() {
                 marginBottom: 40,
               }}
             >
-              Log into an Account
+              Log into an Account 
             </h2>
             <div className="inputBox">
               <input
-                type="text"
+                type="email"
                 required="required"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                //placeholder="Email"
               />
-              <p>Username</p>
+              <p>Email</p>
               <i></i>
             </div>
-            <div className="inputBox"> 
-              <input type="password" required="required" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="inputBox">
+              <input
+                type="password"
+                required="required"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                //placeholder="Password"
+              />
               <p>Password</p>
               <i></i>
             </div>

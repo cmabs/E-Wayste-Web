@@ -12,6 +12,7 @@ import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
 
+
 export default function UserManage() {
   const [users, setUsers] = useState([]);
   const [deleteUserId, setDeleteUserId] = useState(null);
@@ -21,12 +22,45 @@ export default function UserManage() {
   const [userTotal, setUserTotal] = useState(0); 
   const [sortOrder, setSortOrder] = useState('asc'); 
   const [selectedAccountType, setSelectedAccountType] = useState('All'); 
+  const [searchTerm, setSearchTerm] = useState('');
+
 
   let imageURL, viewImageURL;
   const [userLicense, setUserLicense] = useState([]);
   const [openImage, setOpenImage] = useState(false);
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "userWorkID/");
+
+  
+  const handleSearch = () => {
+    if (searchTerm.trim() === '') {
+      fetchUsers(); // Fetch users again to reset the search
+      return;
+    }
+  
+    const filteredUsers = users.map(user => {
+      const name = `${user.firstName} ${user.lastName}`;
+      const searchTermLower = searchTerm.toLowerCase();
+      const nameLower = name.toLowerCase();
+  
+      if (nameLower.includes(searchTermLower)) {
+        const startIndex = nameLower.indexOf(searchTermLower);
+        const endIndex = startIndex + searchTermLower.length;
+        const highlightedName = `${name.substring(0, startIndex)}<span class="highlight">${name.substring(startIndex, endIndex)}</span>${name.substring(endIndex)}`;
+        return { ...user, highlightedName };
+      } else {
+        return null;
+      }
+    }).filter(user => user !== null);
+  
+    setUsers(filteredUsers);
+  };
+  
+
+  useEffect(() => {
+    handleSearch();
+  }, [searchTerm]);
+  
 
   const fetchUsers = async () => {
     try {
@@ -113,6 +147,8 @@ export default function UserManage() {
 
   const handleApproveUser = async (event, userId) => {
     event.preventDefault();
+    console.log('Attempting to approve user:', userId);
+  
     try {
       const firestore = getFirestore();
       const auth = getAuth();
@@ -140,8 +176,18 @@ export default function UserManage() {
       }
     } catch (error) {
       console.error('Error approving user:', error);
+  
+      // Check if the error is due to email already in use
+      if (error.code === 'auth/email-already-in-use') {
+        // Provide feedback to the user about the email already being in use
+        alert('The email address is already in use.');
+      } else {
+        // Handle other errors accordingly
+        // You can provide a generic error message or handle other specific errors here
+        alert('An error occurred while approving the user. Please try again later.');
+      }
     }
-  };
+  };  
   
   const handleRejectUser = async (event, userId) => {
     event.preventDefault();
@@ -177,7 +223,13 @@ export default function UserManage() {
             <div className='userListB'>
               <button style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '15%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
+                {user.highlightedName ? (
+                  <p>
+                    <span dangerouslySetInnerHTML={{ __html: user.highlightedName }} style={{ fontColor: 'green' }} />
+                  </p>
+                ) : (
                   <p>{`${user.firstName} ${user.lastName}`}</p>
+                )}
                 </div>
                 <div style={{ width: '18%', borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
                   <p>{user.username}</p>
@@ -217,14 +269,17 @@ export default function UserManage() {
                   {isPendingUsers && (
                     <>
                       <ImCheckmark
-                        style={{
-                          fontSize: 24,
-                          cursor: 'pointer',
-                          color: 'green',
-                          marginRight: '5px',
-                        }}
-                        onClick={(event) => handleApproveUser(event, user.id)}
-                      />
+                style={{
+                  fontSize: 24,
+                  cursor: 'pointer',
+                  color: 'green',
+                  marginRight: '5px',
+                }}
+                onClick={(event) => {
+                  console.log('Attempting to approve user:', user.id);
+                  handleApproveUser(event, user.id);
+                }}
+              />
                       <MdDelete
                         style={{
                           fontSize: 24,
@@ -262,8 +317,16 @@ export default function UserManage() {
           </h1></div>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', marginLeft: 40, marginTop: -45, gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'row' }}>
-              <input type="text" placeholder="Search" className="searchBar" />
-              <button className="searchButton"><FaSearch style={{ fontSize: 20 }} /></button>
+            <input
+                  type="text"
+                  placeholder="Search name"
+                  className="searchBar"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                  <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+                  <FaSearch style={{ fontSize: 20 }} />
+              </button>
             </div>
             <button className="notifIcon">
               <FaBell />

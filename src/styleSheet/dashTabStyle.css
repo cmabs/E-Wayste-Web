@@ -17,7 +17,28 @@ Daisy Ree Tabal
     border-radius: 25px;
     align-items: center;
     transition: transform 0.3s ease;
-}   
+}
+
+.orangeBox2:hover {
+    transform: scale(1.1); /* Zoom effect on hover */
+}
+
+@media (max-width: 768px) {
+    .orangeBox2 {
+        height: 120px;
+        width: 180px;
+        font-size: 14px; /* Adjust font size for smaller screens */
+    }
+}
+
+@media (max-width: 576px) {
+    .orangeBox2 {
+        height: 100px;
+        width: 140px;
+        font-size: 12px; /* Further adjust font size for even smaller screens */
+    }
+}
+ 
 
 .userList {
     height: 100%;
@@ -40,6 +61,7 @@ Daisy Ree Tabal
 }
 .userList::-webkit-scrollbar-thumb:active {
     background-color: rgb(74, 187, 74);
+  
 }
 
 .userListB {

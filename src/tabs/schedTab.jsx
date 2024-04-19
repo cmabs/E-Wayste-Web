@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import '../styleSheet/schedTabStyle.css';
 import { db } from '../firebase-config';
 import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
+import { FaSearch, FaBell } from 'react-icons/fa';
 
   export default function Schedule() {
     const [scheduleData, setScheduleData] = useState([]);
@@ -19,11 +20,137 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
     const [showAllScheduleTable, setShowAllScheduleTable] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [collectionLength, setCollectionLength] = useState(0);
-  const [eventsLength, setEventsLength] = useState(0);
-  const [assignmentsLength, setAssignmentsLength] = useState(0);
+    const [eventsLength, setEventsLength] = useState(0);
+    const [assignmentsLength, setAssignmentsLength] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
+
 
     const scheduleCollection = collection(db, 'schedule');
 
+    const [sortOrder, setSortOrder] = useState('');
+
+    const handleSearch = () => {
+      if (searchTerm.trim() === '') {
+        setAllSchedulesData(scheduleData);
+        return;
+      }
+    
+      const filteredAllSchedules = allSchedulesData.map(schedule => {
+        const location = `${schedule.location}, ${schedule.collectionRoute && schedule.collectionRoute.coordinates ? schedule.collectionRoute.coordinates.map(coord => coord.locationName).join(', ') : ''}`;
+        const searchTermLower = searchTerm.toLowerCase();
+        const locationLower = location.toLowerCase();
+    
+        if (locationLower.includes(searchTermLower)) {
+          const startIndex = locationLower.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedLocation = `${location.substring(0, startIndex)}<span class="highlight">${location.substring(startIndex, endIndex)}</span>${location.substring(endIndex)}`;
+          return { ...schedule, highlightedLocation };
+        } else {
+          return null;
+        }
+      }).filter(schedule => schedule !== null);
+    
+      const filteredCollectionSchedules = collectionSchedules.map(schedule => {
+        const location = `${schedule.location}, ${schedule.collectionRoute && schedule.collectionRoute.coordinates ? schedule.collectionRoute.coordinates.map(coord => coord.locationName).join(', ') : ''}`;
+        const searchTermLower = searchTerm.toLowerCase();
+        const locationLower = location.toLowerCase();
+    
+        if (locationLower.includes(searchTermLower)) {
+          const startIndex = locationLower.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedLocation = `${location.substring(0, startIndex)}<span class="highlight">${location.substring(startIndex, endIndex)}</span>${location.substring(endIndex)}`;
+          return { ...schedule, highlightedLocation };
+        } else {
+          return null;
+        }
+      }).filter(schedule => schedule !== null);
+    
+      const filteredEventsData = eventsData.map(event => {
+        const location = `${event.location}, ${event.collectionRoute && event.collectionRoute.coordinates ? event.collectionRoute.coordinates.map(coord => coord.locationName).join(', ') : ''}`;
+        const searchTermLower = searchTerm.toLowerCase();
+        const locationLower = location.toLowerCase();
+    
+        if (locationLower.includes(searchTermLower)) {
+          const startIndex = locationLower.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedLocation = `${location.substring(0, startIndex)}<span class="highlight">${location.substring(startIndex, endIndex)}</span>${location.substring(endIndex)}`;
+          return { ...event, highlightedLocation };
+        } else {
+          return null;
+        }
+      }).filter(event => event !== null);
+    
+      const filteredAssignmentsData = assignmentsData.map(assignment => {
+        const location = `${assignment.location}, ${assignment.collectionRoute && assignment.collectionRoute.coordinates ? assignment.collectionRoute.coordinates.map(coord => coord.locationName).join(', ') : ''}`;
+        const searchTermLower = searchTerm.toLowerCase();
+        const locationLower = location.toLowerCase();
+    
+        if (locationLower.includes(searchTermLower)) {
+          const startIndex = locationLower.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedLocation = `${location.substring(0, startIndex)}<span class="highlight">${location.substring(startIndex, endIndex)}</span>${location.substring(endIndex)}`;
+          return { ...assignment, highlightedLocation };
+        } else {
+          return null;
+        }
+      }).filter(assignment => assignment !== null);
+    
+      if (filteredAllSchedules.length === 0 && filteredCollectionSchedules.length === 0 && filteredEventsData.length === 0 && filteredAssignmentsData.length === 0 && searchTerm.trim() !== '') {
+      }
+    
+      setAllSchedulesData(filteredAllSchedules);
+      setCollectionSchedules(filteredCollectionSchedules);
+      setEventsData(filteredEventsData);
+      setAssignmentsData(filteredAssignmentsData);
+    };
+    
+  
+    useEffect(() => {
+      handleSearch();
+    }, [searchTerm]);
+    
+  
+
+    // Function to handle sorting by date
+    const handleSortByDate = () => {
+      // Toggle sorting order
+      const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      setSortOrder(newSortOrder);
+    
+      // Sort collectionSchedules based on the selected order
+      const sortedCollectionSchedules = [...collectionSchedules].sort((a, b) => {
+        const dateA = new Date(a.selectedDate).getTime();
+        const dateB = new Date(b.selectedDate).getTime();
+        return newSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    
+      // Sort allSchedulesData based on the selected order
+      const sortedAllSchedulesData = [...allSchedulesData].sort((a, b) => {
+        const dateA = new Date(a.selectedDate).getTime();
+        const dateB = new Date(b.selectedDate).getTime();
+        return newSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+      
+      const sortedEventsSchedules = [...eventsData].sort((a, b) => {
+        const dateA = new Date(a.selectedDate).getTime();
+        const dateB = new Date(b.selectedDate).getTime();
+        return newSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+      
+      const sortedAssignments = [...assignmentsData].sort((a, b) => {
+        const dateA = new Date(a.selectedDate).getTime();
+        const dateB = new Date(b.selectedDate).getTime();
+        return newSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+      
+
+      // Update state variables with the sorted data
+      setCollectionSchedules(sortedCollectionSchedules);
+      setAllSchedulesData(sortedAllSchedulesData);
+      setEventsData(sortedEventsSchedules);
+      setAssignmentsData(sortedAssignments);
+    };
+    
 
     useEffect(() => {
       const fetchDataByType = async (type) => {
@@ -172,6 +299,16 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
             <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
               Schedule
             </h1>
+            <input
+                  type="text"
+                  placeholder="Search location"
+                  className="searchBar"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                  <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+                  <FaSearch style={{ fontSize: 20 }} />
+              </button>
           </div>
           <div className="schedule-container">
             <div className="schedule-Total" >
@@ -233,7 +370,10 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                     <tr>
                       <th style={{ width: '10%' }}>Type</th>
                       <th style={{ width: '15%' }}>Description</th>
-                      <th style={{ width: '10%' }}>Date</th>
+                      <th style={{ width: '10%'}} onClick={handleSortByDate}>
+                        Date
+                       {sortOrder === 'asc' ? '▲' : '▼'}
+                      </th>
                       <th style={{ width: '10%' }}>Time</th>
                       <th style={{ width: '25%' }}>Location</th>
                       <th style={{ width: '12%' }}>Assigned Driver/Truck</th>
@@ -248,10 +388,16 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                           <td>{schedule.selectedDate}</td>
                           <td>{schedule.startTime}</td>
                           <td>
-                            {schedule.location && schedule.location}
-                            {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
-                              getRouteLocationNames(schedule.collectionRoute.coordinates)}
-                          </td>
+                          {schedule.highlightedLocation ? (
+                            <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
+                          ) : (
+                            <span>
+                              {schedule.location && schedule.location}
+                              {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
+                                getRouteLocationNames(schedule.collectionRoute.coordinates)}
+                            </span>
+                          )}
+                        </td>
                           <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td>
                           <td>
                             <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
@@ -271,7 +417,10 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                     <thead>
                       <tr>
                         <th style={{ width: '15%' }}>Description</th>
-                        <th>Date</th>
+                        <th style={{ width: '10%'}} onClick={handleSortByDate}>
+                        Date
+                       {sortOrder === 'asc' ? '▲' : '▼'}
+                      </th>
                         <th>Time</th>
                         <th style={{ width: '45%' }}>Collection Route</th>
                         <th style={{ width: '10%' }}>Assigned Driver/Truck</th>
@@ -285,15 +434,14 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                           <td>{schedule.selectedDate}</td>
                           <td>{schedule.startTime}</td>
                           <td>
-                          {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
-                            <div>
-                              {schedule.collectionRoute.coordinates.map((coord, index) => (
-                                <div key={index}>
-                                  <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
-                                  {coord.locationName}
-                                </div>
-                              ))}
-                            </div>
+                          {schedule.highlightedLocation ? (
+                            <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
+                          ) : (
+                            <span>
+                              {schedule.location && schedule.location}
+                              {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
+                                getRouteLocationNames(schedule.collectionRoute.coordinates)}
+                            </span>
                           )}
                         </td>
                         <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td> {/* Modified line */}
@@ -316,7 +464,10 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                       <tr>
                         <th>Title</th>
                         <th>Description</th>
-                        <th>Date</th>
+                        <th style={{ width: '10%'}} onClick={handleSortByDate}>
+                        Date
+                       {sortOrder === 'asc' ? '▲' : '▼'}
+                      </th>
                         <th>Time</th>
                         <th>Location</th>
                         <th>Action</th>
@@ -329,7 +480,13 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                           <td>{event.description}</td>
                           <td>{event.selectedDate}</td>
                           <td>{event.startTime}</td>
-                          <td>{event.location}</td>
+                          <td>
+                          {event.highlightedLocation ? (
+                            <span dangerouslySetInnerHTML={{ __html: event.highlightedLocation }}></span>
+                          ) : (
+                            <span>{event.location}</span>
+                          )}
+                        </td>
                           <td>
                             <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
                             <MdDelete style={{ fontSize: '24px', color: 'red' }} onClick={() => deleteSchedule(event.id)} /> {/* Delete icon */}
@@ -348,7 +505,10 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                     <thead>
                       <tr>
                         <th style={{ width: '25%' }}>Description</th>
-                        <th style={{ width: '10%' }}>Date</th>
+                        <th style={{ width: '10%'}} onClick={handleSortByDate}>
+                          Date
+                        {sortOrder === 'asc' ? '▲' : '▼'}
+                      </th>
                         <th style={{ width: '10%' }}>Time</th>
                         <th style={{ width: '30%' }}>Location</th>
                         <th style={{ width: '15%' }}>Assigned Driver</th>
@@ -361,7 +521,13 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
                           <td>{assignment.description}</td>
                           <td>{assignment.selectedDate}</td>
                           <td>{assignment.startTime}</td>
-                          <td>{assignment.location}</td>  
+                          <td>
+                          {assignment.highlightedLocation ? (
+                            <span dangerouslySetInnerHTML={{ __html: assignment.highlightedLocation }}></span>
+                          ) : (
+                            <span>{assignment.location}</span>
+                          )}
+                        </td>
                           <td>{assignment.assignCollector || assignment.assignedTruck || 'N/A'}</td>
                           <td>
                             <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
