@@ -7,7 +7,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 import {  MdDelete } from 'react-icons/md';
-import { Button } from "@mui/material";
+import { Button, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 
 export default function Report() {
   const [userReports, setUserReports] = useState([]);
@@ -15,6 +15,8 @@ export default function Report() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortDirection, setSortDirection] = useState('desc'); 
   const [originalUserReports, setOriginalUserReports] = useState([]);  
+  const [filterValue, setFilterValue] = useState('all'); // State to store the selected filter value
+  const [summaryFilteredReports, setSummaryFilteredReports] = useState([]); // State to store filtered reports for Summary component
 
   const [collectedCount, setCollectedCount] = useState(0);
   const [uncollectedCount, setUncollectedCount] = useState(0);
@@ -23,6 +25,7 @@ export default function Report() {
   const [reports, setReports] = useState([]);
   const [usersData, setUsersData] = useState({});
   const [reportStatus, setReportStatus] = useState({}); // New state for storing report status
+  const [sortOrder, setSortOrder] = useState('');
 
   const storage = getStorage();
   let imageURL, viewImageURL;
@@ -144,6 +147,7 @@ export default function Report() {
           setReportStatus(statusData); // Set report status state
           
           setUsersData(usersData);
+          setSummaryFilteredReports(reportsWithNames); // Set the filtered reports for the Summary component
         }
       } catch (error) {
         console.error('Error fetching user reports:', error);
@@ -168,6 +172,7 @@ export default function Report() {
       (item.dateReported && item.dateReported.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredReports(filtered);
+    setSummaryFilteredReports(filtered); // Update the filtered reports for the Summary component
   };
   
   const handleDelete = async (id) => {
@@ -186,6 +191,20 @@ export default function Report() {
       console.error('Error deleting report:', error);
     }
   };
+
+  const handleFilterChange = (event) => {
+    const selectedValue = event.target.value;
+  
+    setFilterValue(selectedValue); // Update the filter value when the dropdown value changes
+    if (selectedValue === 'all') {
+      setFilteredReports(originalUserReports); // Show all reports
+      setSummaryFilteredReports(originalUserReports); // Update the filtered reports for the Summary component
+    } else {
+      const filteredReports = originalUserReports.filter(report => report.status === selectedValue);
+      setFilteredReports(filteredReports); // Show reports with the selected status
+      setSummaryFilteredReports(filteredReports); // Update the filtered reports for the Summary component
+    }
+  };
   
   const handleSort = () => {
     const sortedReports = [...filteredReports].sort((a, b) => {
@@ -200,19 +219,20 @@ export default function Report() {
     });
 
     setFilteredReports(sortedReports);
+    setSummaryFilteredReports(sortedReports); // Update the filtered reports for the Summary component
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
   function Summary() {
-    const totalReports = filteredReports.length;
+    const totalReports = summaryFilteredReports.length;
   
     const currentDate = new Date().toISOString().split('T')[0];
-    const reportsToday = filteredReports.filter(report => {
+    const reportsToday = summaryFilteredReports.filter(report => {
       const reportDate = new Date(report.dateTime).toISOString().split('T')[0];
       return reportDate === currentDate;
     }).length;
   
-    const collectedCount = filteredReports.filter(report => report.status === 'collected').length;
+    const collectedCount = summaryFilteredReports.filter(report => report.status === 'collected').length;
     const collectedPercentage = totalReports !== 0 ? (collectedCount / totalReports) * 100 : 0;
     const uncollectedCount = totalReports - collectedCount;
     const uncollectedPercentage = totalReports !== 0 ? (uncollectedCount / totalReports) * 100 : 0;
@@ -298,13 +318,31 @@ export default function Report() {
             <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
               <FaSearch style={{ fontSize: 20 }} />
             </button>
-            <Button style={{ backgroundColor: '#51AF5B', marginLeft: 8, color: 'white', borderRadius: 13}} onClick={handleSort}>Sort</Button>
+          <FormControl sx={{ minWidth: 150, marginLeft: 90, }}> {/* Adjust the minWidth value as needed */}
+            <Select
+              style={{
+                borderRadius: 20,
+                height: 40,
+                color: 'green',
+                fontFamily: 'Inter',
+                cursor: 'pointer',
+              }}
+              labelId="filter-label"
+              id="filter"
+              value={filterValue}
+              onChange={handleFilterChange}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="collected">Collected</MenuItem>
+              <MenuItem value="uncollected">Uncollected</MenuItem>
+            </Select>
+          </FormControl>
           </div>
           <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
             <thead>
               <tr>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date Reported</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }} onClick={handleSort}>Date {sortOrder === 'asc' ? '▲' : '▼'}</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th> {/* New column for Status */}

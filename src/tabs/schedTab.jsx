@@ -307,9 +307,22 @@ import EditSchedModal from "../Modals/EditSched";
                           <td>{schedule.selectedDate}</td>
                           <td>{schedule.startTime}</td>
                           <td>
-                            {schedule.location && schedule.location}
-                            {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
-                              getRouteLocationNames(schedule.collectionRoute.coordinates)}
+                            {schedule.location && (
+                              <div>
+                                <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                {schedule.location}
+                              </div>
+                            )}
+                            {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
+                              <div>
+                                {schedule.collectionRoute.coordinates.map((coord, index) => (
+                                  <div key={index}>
+                                    <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                    {coord.locationName}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </td>
                           <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td>
                           <td>

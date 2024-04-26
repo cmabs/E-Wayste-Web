@@ -403,3 +403,49 @@
   background: #d7f6a6;
   cursor: pointer;
 }
+
+/* Style for the select dropdown */
+.select-dropdown {
+  position: relative;
+  width: 150px; /* Adjust width as needed */
+}
+
+/* Style for the select dropdown button */
+.select-dropdown button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 100%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+/* Style for the select dropdown menu */
+.select-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 200px; /* Adjust max-height as needed */
+  overflow-y: auto;
+}
+
+/* Style for dropdown menu items */
+.select-dropdown-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* Hover effect for dropdown menu items */
+.select-dropdown-menu-item:hover {
+  background-color: #f0f0f0;
+}
