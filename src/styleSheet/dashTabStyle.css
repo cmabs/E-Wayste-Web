@@ -17,20 +17,29 @@ Daisy Ree Tabal
     border-radius: 25px;
     align-items: center;
     transition: transform 0.3s ease;
-}   
-.mapDashboard {
-    height: 400px;
-    width: 900px;
-    background-image: url('../images/SampleMap.png'); 
-    background-repeat: no-repeat;
-    background-attachment: scroll;
-    background-size: 100% 130%;
-    background-position: center;
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 0.5px;
-    border-color: rgb(180,180,180);
 }
+
+.orangeBox2:hover {
+    transform: scale(1.1); /* Zoom effect on hover */
+}
+
+@media (max-width: 768px) {
+    .orangeBox2 {
+        height: 120px;
+        width: 180px;
+        font-size: 14px; /* Adjust font size for smaller screens */
+    }
+}
+
+@media (max-width: 576px) {
+    .orangeBox2 {
+        height: 100px;
+        width: 140px;
+        font-size: 12px; /* Further adjust font size for even smaller screens */
+    }
+}
+ 
+
 .userList {
     height: 100%;
     width: 100%;
@@ -41,6 +50,7 @@ Daisy Ree Tabal
     margin-bottom: 30px;
     overflow-y: auto;
 }
+
 .userList::-webkit-scrollbar {
     width: 5px;
 }
@@ -51,6 +61,7 @@ Daisy Ree Tabal
 }
 .userList::-webkit-scrollbar-thumb:active {
     background-color: rgb(74, 187, 74);
+  
 }
 
 .userListB {

@@ -14,6 +14,8 @@ export default function Dashboard() {
   const [totalUncollected, setTotalUncollected] = useState(0);
   const [loggedInUserMunicipality, setLoggedInUserMunicipality] = useState(null);
 
+  const [filteredUsers, setFilteredUsers] = useState([]);
+
   const fetchLoggedInUserLguCode = async () => {
     try {
       const auth = getAuth();
@@ -143,15 +145,24 @@ export default function Dashboard() {
     );
   }
   
+  
   return (
     <>
       <div style={{ marginLeft: 40, marginTop: 40 }}>
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0 }}>Dashboard</h1>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'row' }}>
-              <input type="text" placeholder="Search" className="searchBar" />
-              <button className="searchButton"><FaSearch style={{ fontSize: 20 }} /></button>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <input
+                    type="text"
+                    placeholder="Search "
+                    className="searchBar"
+              
+                  />
+                  <button className="searchButton" >
+                  <FaSearch style={{ fontSize: 20 }} />
+              </button>
+
             </div>
             <button className="notifIcon">
               <FaBell />
@@ -196,7 +207,7 @@ export default function Dashboard() {
               <p>Location</p>
             </div>
           </div>
-          {UserListContent()}
+          <UserListContent />
         </div>
       </div>
     </>

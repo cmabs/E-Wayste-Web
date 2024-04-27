@@ -12,6 +12,7 @@ import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
 import { render } from "@testing-library/react";
+import { FaSearch, FaBell } from 'react-icons/fa';
 
 export default function UserManage() {
   const [users, setUsers] = useState([]);
@@ -36,7 +37,69 @@ export default function UserManage() {
   const [isTruckOpen, setIsTruckOpen] = useState(false);
   const [isUserListVisible, setUserListVisible] = useState(true);
   const [trucks, setTrucks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
+  const handleSearch = () => {
+    if (searchTerm.trim() === '') {
+      fetchUsers(); // Fetch users again to reset the search
+      fetchTrucks(); // Fetch trucks again to reset the search
+      return;
+    }
+  
+    if (selectedSection === "collector") {
+      const filteredUsers = users.map(user => {
+        const name = `${user.firstName} ${user.lastName}`;
+        const searchTermLower = searchTerm.toLowerCase();
+        const nameLower = name.toLowerCase();
+  
+        if (nameLower.includes(searchTermLower)) {
+          const startIndex = nameLower.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedName = `${name.substring(0, startIndex)}<span class="highlight">${name.substring(startIndex, endIndex)}</span>${name.substring(endIndex)}`;
+          return { ...user, highlightedName };
+        } else {
+          return null;
+        }
+      }).filter(user => user !== null);
+  
+      setUsers(filteredUsers);
+    } else if (selectedSection === "trucks") {
+      const filteredTrucks = trucks.filter(truck => {
+        const driverName = getDriverName(truck.driverID);
+        const searchTermLower = searchTerm.toLowerCase();
+        const driverNameLower = driverName.toLowerCase();
+  
+        return driverNameLower.includes(searchTermLower);
+      });
+  
+      setTrucks(filteredTrucks);
+    }
+  
+    if (isPendingUsers) {
+      const filteredPendingUsers = users.map(user => {
+        const name = `${user.firstName} ${user.lastName}`;
+        const searchTermLower = searchTerm.toLowerCase();
+        const nameLower = name.toLowerCase();
+  
+        if (nameLower.includes(searchTermLower)) {
+          const startIndex = nameLower.indexOf(searchTermLower);
+          const endIndex = startIndex + searchTermLower.length;
+          const highlightedName = `${name.substring(0, startIndex)}<span class="highlight">${name.substring(startIndex, endIndex)}</span>${name.substring(endIndex)}`;
+          return { ...user, highlightedName };
+        } else {
+          return null;
+        }
+      }).filter(user => user !== null);
+  
+      setUsers(filteredPendingUsers);
+    }
+  };
+  
+  useEffect(() => {
+    handleSearch();
+  }, [searchTerm]);
+  
+  
   const fetchLoggedInUserLguCode = async () => {
     try {
       const auth = getAuth();
@@ -159,7 +222,13 @@ export default function UserManage() {
           <tbody className="reportTableBody">
             {filteredUsers.map((user) => (
               <tr key={user.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
-                <td style={{ borderRight: '1px solid #ddd' }}>{`${user.firstName} ${user.lastName}`}</td>
+               <td style={{ borderRight: '1px solid #ddd' }}>
+                {user.highlightedName ? (
+                  <span dangerouslySetInnerHTML={{ __html: user.highlightedName }} style={{ color: 'green' }} />
+                ) : (
+                  <>{`${user.firstName} ${user.lastName}`}</>
+                )}
+              </td>
                 <td style={{ borderRight: '1px solid #ddd' }}>{user.username}</td>
                 <td style={{ borderRight: '1px solid #ddd' }}>{user.email}</td>
                 <td style={{ borderRight: '1px solid #ddd' }}>{user.contactNo}</td>
@@ -191,7 +260,13 @@ export default function UserManage() {
               return (
                 <tr key={truck.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
                   <td style={{ borderRight: '1px solid #ddd' }}>{truck.plateNo}</td>
-                  <td style={{ borderRight: '1px solid #ddd' }}>{getDriverName(truck.driverID)}</td>
+                  <td style={{ borderRight: '1px solid #ddd'}}>
+                    {getDriverName(truck.driverID) ? (
+                      <span dangerouslySetInnerHTML={{ __html: getDriverName(truck.driverID) }} style={{ color: searchTerm ? 'green' : 'black' }} />
+                    ) : (
+                      <>{getDriverName(truck.driverID)}</>
+                    )}
+                  </td>
                   <td style={{ borderRight: '1px solid #ddd' }}>{getCollectorNames(truck.members)}</td>
                   <td style={{ borderRight: '1px solid #ddd' }}>
                     <MdOutlineModeEdit
@@ -349,7 +424,13 @@ export default function UserManage() {
           <tbody className="reportTableBody">
             {users.map((user, userID) => (
               <tr key={userID} style={{ border: '1px solid #ddd', textAlign: 'center' }}>
-                <td style={{ borderRight: '1px solid #ddd' }}>{`${user.firstName} ${user.lastName}`}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>
+                  {user.highlightedName ? (
+                    <span dangerouslySetInnerHTML={{ __html: user.highlightedName }} style={{ color: 'green' }} />
+                  ) : (
+                    <>{`${user.firstName} ${user.lastName}`}</>
+                  )}
+                </td>
                 <td style={{ borderRight: '1px solid #ddd' }}>{user.username}</td>
                 <td style={{ borderRight: '1px solid #ddd' }}>{user.email}</td>
                 <td style={{ borderRight: '1px solid #ddd' }}>{user.accountType}</td>
@@ -384,6 +465,7 @@ export default function UserManage() {
   return (
     <>
       <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
+        
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
           <button className="pending-users-button" onClick={handlePendingUsersClick}>Pending Users</button>
           {!isPendingUsers && (
@@ -408,9 +490,27 @@ export default function UserManage() {
               <EditTruckModal isOpen={isEditTruckOpen} handleClose={() => setIsEditTruckOpen(false)} selectedTruck={selectedTruck} />
             </div>
           )}
+          
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
             {isPendingUsers ? 'Pending Users' : 'User Management'}
           </h1>
+          </div>
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', marginLeft: 40, marginTop: -45, gap: 20,  width: 1090 }}>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <input
+                  type="text"
+                  placeholder="Search name"
+                  className="searchBar"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                  <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+                  <FaSearch style={{ fontSize: 20 }} />
+              </button>
+            </div>
+            <button className="notifIcon">
+              <FaBell />
+            </button>
           </div>
         <div style={{  marginTop: 70, marginBottom: 40, padding: 10, borderRadius: 20, width: 1100 }}>  
         {renderTableContent()}

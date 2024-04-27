@@ -4,81 +4,149 @@ import '../styleSheet/mapTabStyle.css'
 
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { GiMineTruck } from 'react-icons/gi';
-import { BsFillPersonFill } from 'react-icons/bs';
-import { useJsApiLoader, GoogleMap, Marker, InfoWindow} from '@react-google-maps/api';
+import { BsFillPersonFill, BsGeoAlt } from 'react-icons/bs';
+import { useJsApiLoader, GoogleMap, Marker ,  InfoWindow} from '@react-google-maps/api';
 import { db , storage} from '../firebase-config';
 import { collection, getDocs, where, query } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
+
 const containerStyle = {
-    width: '650px',
-    height: '570px'
+    width: '700px',
+    height: '580px',
+   
 };
 
+
 const center = {
-    lat: 10.3157,
-    lng: 123.8854
+    lat: 10.3156992,
+    lng: 123.88543660000005,
 };
-async function fetchUncollectedReports() {
-    const q = query(collection(db, 'generalUsersReports'), where('status', '==', 'uncollected'));
-    const querySnapshot = await getDocs(q);
+
+async function fetchAllUncollectedReports() {
+    const querySnapshot = await getDocs(collection(db, 'generalUsersReports'));
     const uncollectedReports = [];
     querySnapshot.forEach((doc) => {
         const reportData = doc.data();
-        uncollectedReports.push({
-            id: doc.id,
-            position: {
-                lat: reportData.latitude,
-                lng: reportData.longitude
-            },
-            associatedImage: reportData.associatedImage,
-            location: reportData.location // Assuming the location field is stored in your Firestore document
-        });
+        if (reportData.status === 'uncollected') {
+            uncollectedReports.push({
+                id: doc.id,
+                position: {
+                    lat: reportData.latitude,
+                    lng: reportData.longitude
+                },
+                associatedImage: reportData.associatedImage,
+                location: reportData.location,
+                dateTime: reportData.dateTime
+            });
+        }
     });
     return uncollectedReports;
+}
+
+async function getDriverNames(driverIDs) {
+    try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const driverNames = driverIDs.map(driverID => {
+            const driver = usersData.find(user => user.id === driverID);
+            return driver ? `${driver.firstName} ${driver.lastName}` : '';
+        });
+        return driverNames;
+
+    } catch (error) {
+        console.error('Error fetching users data:', error);
+        return [];
+    }
 }
 
 export default function Map() {
 
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: "AIzaSyCJxjr37KaccJuCPGnJ_p6_N7Ke1I7b9ys" 
+        googleMapsApiKey: "AIzaSyCCKJQavilVTZguPP8Bxy0GCPVasd3Ravg" 
     });
 
     const [map, setMap] = useState(null);
     const [markers, setMarkers] = useState([]);
     const [uncollectedReports, setUncollectedReports] = useState([]); 
     const [selectedMarker, setSelectedMarker] = useState(null);
-    
+    const [imageURL, setImageURL] = useState(null);
+    const [trucksData, setTrucksData] = useState([]);
+
     useEffect(() => {
-        // Function to fetch markers from Firestore and associated images from Firebase Storage
-        async function fetchMarkers() {
-          // Fetch markers from Firestore (generalusersreports collection)
-          const firestoreMarkers = []; // Store markers from Firestore
-    
-          // Assume you have fetched the markers from Firestore and stored them in an array named firestoreMarkers
-    
-          // Fetch associated images from Firebase Storage for each marker
-        const firestoreMarkersWithImages = await Promise.all(firestoreMarkers.map(async (marker) => {
-            const imageUrl = await storage.ref(`postImages/${marker.associatedImage}`).getDownloadURL();
-            return { ...marker, imageUrl }; // Add imageUrl to the marker object
-        }));
+        const fetchTrucksData = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'trucks'));
+                const trucksArray = [];
+                querySnapshot.forEach(async (doc) => {
+                    const truckData = doc.data();
+                    trucksArray.push(truckData);
+                });
 
-        setMarkers(firestoreMarkersWithImages);
+                // Extracting driver IDs from trucks data
+                const driverIDs = trucksArray.map(truck => truck.driverID);
 
-        }
+                // Fetching driver names for all driver IDs
+                const driverNames = await getDriverNames(driverIDs);
+
+                // Adding driver names to trucks data
+                trucksArray.forEach((truck, index) => {
+                    truck.driverName = driverNames[index];
+                });
+
+
+                setTrucksData(trucksArray);
+            } catch (error) {
+                console.error('Error fetching trucks data:', error);
+            }
+        };
+
+        fetchTrucksData();
+    }, []);
+
+     useEffect(() => {
+        const fetchTrucksData = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'trucks'));
+                const trucksArray = [];
+                querySnapshot.forEach((doc) => {
+                    const truckData = doc.data();
+                    trucksArray.push(truckData);
+                });
+                setTrucksData(trucksArray);
+            } catch (error) {
+                console.error('Error fetching trucks data:', error);
+            }
+        };
+
+        fetchTrucksData();
+    }, []);
+
     
-        fetchMarkers(); // Fetch markers when the component mounts
-      }, []);
     const handleMarkerClick = useCallback((marker) => {
         setSelectedMarker(marker);
       }, []);
+
+      useEffect(() => {
+        const fetchImageURL = async () => {
+            if (selectedMarker) {
+                try {
+                    const url = await getDownloadURL(ref(storage, `postImages/${selectedMarker.associatedImage}`));
+                    setImageURL(url);
+                } catch (error) {
+                    console.error('Error fetching image URL:', error);
+                }
+            }
+        };
+        fetchImageURL();
+    }, [selectedMarker]);
+
       
       const handleInfoClose = () => {
         setSelectedMarker(null);
       };
     const onLoad = useCallback(function callback(map) {
-        // This is just an example of getting and using the map instance!!! don't just blindly copy!
         const bounds = new window.google.maps.LatLngBounds(center);
         map.fitBounds(bounds);
         setMap(map);
@@ -91,7 +159,7 @@ export default function Map() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const uncollectedReportsData = await fetchUncollectedReports();
+                const uncollectedReportsData = await fetchAllUncollectedReports();
                 setUncollectedReports(uncollectedReportsData);
             } catch (error) {
                 console.error('Error fetching uncollected reports:', error);
@@ -100,51 +168,41 @@ export default function Map() {
         fetchData();
     }, []);
 
-    function CollectionListContent() {
-        let temp = [];
-        for (let i = 0; i < 50; i++) {
-            temp.push(
-                <div className="collectionB"> 
+   function CollectionListContent() {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {trucksData.map((truck, index) => (
+                <div className="collectionB" key={index}>
                     <button>
-                        <div style={{display: 'flex', flexDirection: 'row', width: '100%'}}>
-                            <div style={{display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start'}}>
-                                <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)'}}>Plate Number</p>
-                                <p style={{padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800}}>HAS 1234</p>
+                        <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                            <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Plate Number</p>
+                                <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800 }}>{truck.plateNo}</p>
                             </div>
-                            <div style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                                <GiMineTruck style={{fontSize: 50, color: 'rgb(110,170,46)'}} />
+                            <div style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                <GiMineTruck style={{ fontSize: 50, color: 'rgb(110,170,46)' }} />
                             </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-start', textAlign: 'left', paddingTop: 45, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(13,86,1)'}}>
-                            <p style={{padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)'}}>Location</p>
-                            <p style={{padding: 0, margin: 0, marginBottom: 15, fontSize: '1.3em', fontWeight: 800, color: 'rgb(13,86,1)'}}>Jumabon St., Apas, Cebu City, 6000</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-start', textAlign: 'left', paddingTop: 45, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(13,86,1)' }}>
+                            <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Location</p>
+                            <p style={{ padding: 0, margin: 0, marginBottom: 15, fontSize: '1.3em', fontWeight: 800, color: 'rgb(13,86,1)' }}>{truck.location}</p>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', textAlign: 'left', paddingTop: 8 }}>
-                            <div style={{ display: 'flex', height: 40, width: 40, backgroundColor: 'rgb(249, 227, 181)', borderRadius: 100, borderStyle: 'solid', borderWidth: 1, borderColor: 'rgb(226,160,43)', justifyContent: 'center', alignItems: 'center', marginLeft: 10}}>
-                                <BsFillPersonFill style={{fontSize: 30, color: 'rgb(226,160,43)'}} />
+                            <div style={{ display: 'flex', height: 40, width: 40, backgroundColor: 'rgb(249, 227, 181)', borderRadius: 100, borderStyle: 'solid', borderWidth: 1, borderColor: 'rgb(226,160,43)', justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
+                                <BsFillPersonFill style={{ fontSize: 30, color: 'rgb(226,160,43)' }} />
                             </div>
-                            <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start', marginLeft: 10}}>
-                                <p style={{padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800}}>Arturo Jansen</p>
-                                <p style={{padding: 0, margin: 0, fontWeight: 600, color: 'rgb(120,120,120)'}}>Apas, Cebu City</p>
+                            <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start', marginLeft: 10 }}>
+                                <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800 }}>{truck.driverName}</p>
+                                <p style={{ padding: 0, margin: 0, fontWeight: 600, color: 'rgb(120,120,120)' }}>location</p>
+
                             </div>
                         </div>
                     </button>
                 </div>
-            );
-        }
-
-        <ul>
-            {temp.map(item =>
-                <li key="{item}">{item}</li>    
-            )}
-        </ul>
-
-        return (
-            <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-                {temp}
-            </div>
-        );
-    }
+            ))}
+        </div>
+    );
+}
 
     return (
         <>
@@ -169,14 +227,14 @@ export default function Map() {
                  <div />
                  <div className="mapPage">
                     {isLoaded ? (
-                <GoogleMap 
+                <GoogleMap
                     mapContainerStyle={containerStyle}
                     center={center}
                     zoom={10}
                     onLoad={onLoad}
                     onUnmount={onUnmount}
                 >{uncollectedReports.map((report, index) => (
-                    <Marker 
+                <Marker 
                     key={index}
                     position={report.position}
                     onClick={() => handleMarkerClick(report)}
@@ -186,26 +244,37 @@ export default function Map() {
                     }}
                 />
                 ))}
-                 {selectedMarker && (
+                  {selectedMarker && imageURL && (
                     <InfoWindow
-                    position={selectedMarker.position}
-                    onCloseClick={handleInfoClose}
-                >
-                    <div style={{ width: 200 }}>
-                        <img
-                            src={selectedMarker.imageUrl} // Use the imageUrl fetched from Firebase Storage
-                            alt="Report Image"
-                            style={{ width: 80, height: 80 }}
-                        />
-                        <div>{selectedMarker.location}</div>
-                    </div>
-                </InfoWindow>
-            )}
+                        position={selectedMarker.position}
+                        onCloseClick={handleInfoClose}
+                       
+                    >
+                        <div style={{ width: '300px', display: 'flex', flexDirection: 'row' }}>
+                            <img
+                                src={imageURL}
+                                alt="Report Image"
+                                style={{ backgroundColor: '#E5F7E7', padding: 10,borderRadius:10, width: '230px', height: '100px', marginRight: '10px' }}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                <div style={{color:'green', fontSize: 20, fontWeight:'bold', marginTop: 0}}>name</div>
+                                <div  style={{ marginBottom: 10}}>{selectedMarker.dateTime}</div>
+                                <div>
+                                <BsGeoAlt style={{ color: 'red', marginRight: '5px' }} />
+                                    {selectedMarker.location}
+                                </div>
+                                <button style={{ marginTop: 13, borderRadius: 10, backgroundColor: 'green',borderColor:'white', color: 'white', fontWeight: 'bold'}}>Collect</button>
+                            </div>
+                        </div>
+                    </InfoWindow>
+                )}
+                
                     <></>
                 </GoogleMap>
             ) : (
                 
                 <></>
+              
             )}
             
             </div>
