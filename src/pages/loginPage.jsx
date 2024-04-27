@@ -4,42 +4,50 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { db } from "../firebase-config";
 import "../styleSheet/registerPageStyle.css";
 import Logo from "../images/E-Wayste-logo.png";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const auth = getAuth(); // Initialize Firebase Auth
+  const auth = getAuth(); 
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent the form from submitting the traditional way
+    e.preventDefault(); 
     try {
-      const allowedDomain = ".com"; // Set your domain here
-
-      // Check if the entered email ends with the allowed domain
-      if (!email.endsWith(allowedDomain)) {
-        throw new Error('Email domain not allowed.');
-      }
-
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-    
-      localStorage.setItem('userId', user.uid);
 
-      console.log('Logged in successfully!');
-      console.log('User UID:', user.uid); // Use user UID here as needed
-      navigate('/Home'); // Navigate to the Home page
+      const usersAdminRef = collection(db, 'usersAdmin');
+      const q = query(usersAdminRef, where("email", "==", user.email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.log('User is not in the usersAdmin collection.');
+        alert('You do not have permission to log in.');
+        return; 
+      }
       
+      localStorage.setItem('userId', user.email);
+      console.log('Logged in successfully!');
+      console.log('User Email:', user.email); 
+      
+      try {
+        navigate('/Home');
+      } catch (navigationError) {
+        console.error('Error navigating to Home:', navigationError);
+        alert('Failed to navigate to Home page. Please try again.');
+      }
     } catch (error) {
       console.error('Error logging in: ', error);
       alert('Failed to log in. Please check your credentials.');
     }
   };
-
+  
   return (
     <>
       <div className="registerPage">
-        <div className="areaForm">
+        <div className="areaForm">  
           <div className="form">
             <h1
               style={{
@@ -60,7 +68,7 @@ export default function Login() {
                 marginBottom: 40,
               }}
             >
-              Log into an Account 
+              Log into an Account
             </h2>
             <div className="inputBox">
               <input
@@ -68,7 +76,6 @@ export default function Login() {
                 required="required"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                //placeholder="Email"
               />
               <p>Email</p>
               <i></i>
@@ -79,7 +86,6 @@ export default function Login() {
                 required="required"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                //placeholder="Password"
               />
               <p>Password</p>
               <i></i>

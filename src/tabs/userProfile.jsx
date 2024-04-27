@@ -78,8 +78,7 @@ export default function Profile() {
                   contactNo: editedContactNo,
               });
               console.log("Profile updated successfully!");
-              setIsEditMode(false); // Exit edit mode upon successful save
-              // Optionally, refetch or update local state to reflect changes
+              setIsEditMode(false); 
               alert("Profile updated successfully!");
           } else {
               console.log("No user document found for the email:", userProfile.email);

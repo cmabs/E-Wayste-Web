@@ -279,19 +279,6 @@ import { FaSearch, FaBell } from 'react-icons/fa';
         console.error('Error deleting schedule:', error);
       }
     };
-    
-
-    const handleAddSchedClick = () => {
-      setIsModalOpen(true);
-    };
-  
-    const handleCloseModal = () => {
-      setIsModalOpen(false);
-    };
-
-    const getRouteLocationNames = (coordinates) => {
-      return coordinates.map(coord => coord.locationName).join(', ');
-    };
       
       return (
         <div style={{ marginLeft: 40, marginTop: 40, width: 1000 }}>
@@ -333,14 +320,14 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                   </div>
                 </div>
               </button>
-              <button className="collection" onClick={handleCollectionButtonClick} style={{ width: '20%' }}>
+              <button className="collection" onClick={handleCollectionButtonClick} style={{ width: '10%' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>Collection</p>
                   </div>
                 </div>
               </button>
-              <button className="events" onClick={handleEventsButtonClick} style={{ width: '20%' }}>
+              <button className="events" onClick={handleEventsButtonClick} style={{ width: '10%' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>Events</p>
@@ -354,13 +341,7 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                   </div>
                 </div>
               </button>
-              <button className="addSched" style={{ width: '30%', marginLeft: '-40px' }}>
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                    <p style={{ padding: 5, margin: 0, marginBottom: 3, width: 100, fontWeight: 600 }}>+ Add Schedule</p>
-                  </div>
-                </div>
-              </button>
+              
             </div>
             {showAllScheduleTable && (
               <div className="allschedule-table">
@@ -388,16 +369,29 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                           <td>{schedule.selectedDate}</td>
                           <td>{schedule.startTime}</td>
                           <td>
-                          {schedule.highlightedLocation ? (
-                            <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
-                          ) : (
-                            <span>
-                              {schedule.location && schedule.location}
-                              {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
-                                getRouteLocationNames(schedule.collectionRoute.coordinates)}
-                            </span>
-                          )}
-                        </td>
+                            {schedule.highlightedLocation ? (
+                              <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
+                            ) : (
+                              <div>
+                                {schedule.location && (
+                                  <div>
+                                    <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                    {schedule.location}
+                                  </div>
+                                )}
+                                {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
+                                  <div>
+                                    {schedule.collectionRoute.coordinates.map((coord, index) => (
+                                      <div key={index}>
+                                        <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                        {coord.locationName}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </td>
                           <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td>
                           <td>
                             <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
@@ -434,16 +428,23 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                           <td>{schedule.selectedDate}</td>
                           <td>{schedule.startTime}</td>
                           <td>
-                          {schedule.highlightedLocation ? (
-                            <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
-                          ) : (
-                            <span>
-                              {schedule.location && schedule.location}
-                              {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
-                                getRouteLocationNames(schedule.collectionRoute.coordinates)}
-                            </span>
-                          )}
-                        </td>
+                            {schedule.highlightedLocation ? (
+                              <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
+                            ) : (
+                              <div>                       
+                                {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
+                                  <div>
+                                    {schedule.collectionRoute.coordinates.map((coord, index) => (
+                                      <div key={index}>
+                                        <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                        {coord.locationName}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </td>
                         <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td> {/* Modified line */}
                           <td>
                             <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} />

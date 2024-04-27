@@ -297,6 +297,7 @@ export default function Report() {
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Date Reported</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Image</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Action</th>
               </tr>
@@ -334,6 +335,7 @@ export default function Report() {
                   )}
                 </div>
                 </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.status}</td>              
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                     <MdDelete onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} style={{ cursor: 'pointer', marginLeft: '14px', color: 'red', fontSize: '20px'}} />
                   </td>
