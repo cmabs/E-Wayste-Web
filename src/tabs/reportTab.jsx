@@ -7,7 +7,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 import {  MdDelete } from 'react-icons/md';
-import { Button } from "@mui/material";
+import { Button, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 
 export default function Report() {
   const [userReports, setUserReports] = useState([]);
@@ -15,6 +15,8 @@ export default function Report() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortDirection, setSortDirection] = useState('desc'); 
   const [originalUserReports, setOriginalUserReports] = useState([]);  
+  const [filterValue, setFilterValue] = useState('all'); // State to store the selected filter value
+  const [summaryFilteredReports, setSummaryFilteredReports] = useState([]); // State to store filtered reports for Summary component
 
   const [collectedCount, setCollectedCount] = useState(0);
   const [uncollectedCount, setUncollectedCount] = useState(0);
@@ -23,6 +25,7 @@ export default function Report() {
   const [reports, setReports] = useState([]);
   const [usersData, setUsersData] = useState({});
   const [reportStatus, setReportStatus] = useState({}); // New state for storing report status
+  const [sortOrder, setSortOrder] = useState('');
 
   const storage = getStorage();
   let imageURL, viewImageURL;
@@ -31,31 +34,6 @@ export default function Report() {
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "postImages/");
   const [reportImage, setReportImage] = useState([]);
-
-  const [isAll, setIsAll] = useState(true); // State variable for All filter
-  const [isCollected, setIsCollected] = useState(false); // State variable for Collected filter
-  const [isUncollected, setIsUncollected] = useState(false); // State variable for Uncollected filter
-
-  const handleFilterChange = (filter) => {
-    if (filter === 'All') {
-      setIsAll(true);
-      setIsCollected(false);
-      setIsUncollected(false);
-      setFilteredReports(originalUserReports);
-    } else if (filter === 'Collected') {
-      setIsAll(false);
-      setIsCollected(true);
-      setIsUncollected(false);
-      const filteredCollected = originalUserReports.filter(report => reportStatus[report.id] === 'collected');
-      setFilteredReports(filteredCollected);
-    } else if (filter === 'Uncollected') {
-      setIsAll(false);
-      setIsCollected(false);
-      setIsUncollected(true);
-      const filteredUncollected = originalUserReports.filter(report => reportStatus[report.id] === 'uncollected');
-      setFilteredReports(filteredUncollected);
-    }
-  };
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -169,6 +147,7 @@ export default function Report() {
           setReportStatus(statusData); // Set report status state
           
           setUsersData(usersData);
+          setSummaryFilteredReports(reportsWithNames); // Set the filtered reports for the Summary component
         }
       } catch (error) {
         console.error('Error fetching user reports:', error);
@@ -188,18 +167,13 @@ export default function Report() {
   };
 
   const handleSearch = () => {
-
-    if (searchTerm.trim() === '') {
-      setFilteredReports(userReports); // Reset filtered reports to all reports
-      return;
-    }
     const filtered = userReports.filter(item =>
       (item.location && item.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.dateReported && item.dateReported.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredReports(filtered);
-  }; 
-
+    setSummaryFilteredReports(filtered); // Update the filtered reports for the Summary component
+  };
   
   const handleDelete = async (id) => {
     try {
@@ -217,6 +191,20 @@ export default function Report() {
       console.error('Error deleting report:', error);
     }
   };
+
+  const handleFilterChange = (event) => {
+    const selectedValue = event.target.value;
+  
+    setFilterValue(selectedValue); // Update the filter value when the dropdown value changes
+    if (selectedValue === 'all') {
+      setFilteredReports(originalUserReports); // Show all reports
+      setSummaryFilteredReports(originalUserReports); // Update the filtered reports for the Summary component
+    } else {
+      const filteredReports = originalUserReports.filter(report => report.status === selectedValue);
+      setFilteredReports(filteredReports); // Show reports with the selected status
+      setSummaryFilteredReports(filteredReports); // Update the filtered reports for the Summary component
+    }
+  };
   
   const handleSort = () => {
     const sortedReports = [...filteredReports].sort((a, b) => {
@@ -231,19 +219,20 @@ export default function Report() {
     });
 
     setFilteredReports(sortedReports);
+    setSummaryFilteredReports(sortedReports); // Update the filtered reports for the Summary component
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
   function Summary() {
-    const totalReports = filteredReports.length;
+    const totalReports = summaryFilteredReports.length;
   
     const currentDate = new Date().toISOString().split('T')[0];
-    const reportsToday = filteredReports.filter(report => {
+    const reportsToday = summaryFilteredReports.filter(report => {
       const reportDate = new Date(report.dateTime).toISOString().split('T')[0];
       return reportDate === currentDate;
     }).length;
   
-    const collectedCount = filteredReports.filter(report => report.status === 'collected').length;
+    const collectedCount = summaryFilteredReports.filter(report => report.status === 'collected').length;
     const collectedPercentage = totalReports !== 0 ? (collectedCount / totalReports) * 100 : 0;
     const uncollectedCount = totalReports - collectedCount;
     const uncollectedPercentage = totalReports !== 0 ? (uncollectedCount / totalReports) * 100 : 0;
@@ -312,21 +301,6 @@ export default function Report() {
         <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
           <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>Garbage Reports</h1>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
-          <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10, marginLeft: 500, marginTop: 40}}>
-          <input
-            type="text"
-            placeholder="Search by location, or date"
-            className="searchBar"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              handleSearch(); // Invoke handleSearch on every change in input
-            }}
-          />
-            <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
-              <FaSearch style={{ fontSize: 20 }} />
-            </button>
-          </div>
             <div className="summary-con">
               {Summary()}
             </div>
@@ -334,18 +308,41 @@ export default function Report() {
         </div>
         <div style={{ marginTop: 290, marginBottom: 40 }}>
           <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10}}>
-            <Button onClick={() => handleFilterChange('All')} className={isAll ? 'activeFilter' : ''}>All</Button>
-            <Button style={{color: 'green'}} onClick={() => handleFilterChange('Collected')} className={isCollected ? 'activeFilter' : ''}>Collected</Button>
-            <Button style={{color: 'orange'}} onClick={() => handleFilterChange('Uncollected')} className={isUncollected ? 'activeFilter' : ''}>Uncollected</Button>
+            <input
+              type="text"
+              placeholder="Search by location, or date"
+              className="searchBar"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+              <FaSearch style={{ fontSize: 20 }} />
+            </button>
+          <FormControl sx={{ minWidth: 150, marginLeft: 90, }}> {/* Adjust the minWidth value as needed */}
+            <Select
+              style={{
+                borderRadius: 20,
+                height: 40,
+                color: 'green',
+                fontFamily: 'Inter',
+                cursor: 'pointer',
+              }}
+              labelId="filter-label"
+              id="filter"
+              value={filterValue}
+              onChange={handleFilterChange}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="collected">Collected</MenuItem>
+              <MenuItem value="uncollected">Uncollected</MenuItem>
+            </Select>
+          </FormControl>
           </div>
-          {isAll &&
           <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
             <thead>
               <tr>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }} onClick={handleSort}>
-                 Date<br />Reported {sortDirection === 'asc' ? '▲' : '▼'}
-                </th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }} onClick={handleSort}>Date {sortOrder === 'asc' ? '▲' : '▼'}</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th> {/* New column for Status */}
@@ -359,21 +356,9 @@ export default function Report() {
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                     {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
                   </td>
-                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                  {item.highlightedDate ? (
-                    <span dangerouslySetInnerHTML={{ __html: item.highlightedDate }} style={{ color: 'green' }} />
-                  ) : (
-                    <>{formatDateTime(item.dateTime)}</>
-                  )}
-                </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatDateTime(item.dateTime)}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {item.highlightedLocation ? (
-                      <span dangerouslySetInnerHTML={{ __html: item.highlightedLocation }} style={{ color: 'green' }} />
-                    ) : (
-                      <>{item.location}</>
-                    )}
-                  </td>
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{item.location}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{reportStatus[item.id]}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                     {reportImage.map((url) => {
@@ -400,134 +385,6 @@ export default function Report() {
               ))}
             </tbody>
           </table>
-         }
-         {isCollected &&
-          <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-            <thead>
-              <tr>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }} onClick={handleSort}>
-                 Date<br />Reported {sortDirection === 'asc' ? '▲' : '▼'}
-                </th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th> {/* New column for Status */}
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Image</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody className="reportTableBody" style={{ width: 2000 }}>
-              {filteredReports.map((item) => (
-                <tr key={item.id} className="tableRow">
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
-                  </td>
-                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                  {item.highlightedDate ? (
-                    <span dangerouslySetInnerHTML={{ __html: item.highlightedDate }} style={{ color: 'green' }} />
-                  ) : (
-                    <>{formatDateTime(item.dateTime)}</>
-                  )}
-                </td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {item.highlightedLocation ? (
-                      <span dangerouslySetInnerHTML={{ __html: item.highlightedLocation }} style={{ color: 'green' }} />
-                    ) : (
-                      <>{item.location}</>
-                    )}
-                  </td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{reportStatus[item.id]}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {reportImage.map((url) => {
-                      if(url.includes(item.associatedImage)) {
-                          imageURL = url;
-                      }
-                    })}
-                    <div style={{ width: '100%', height: 50, borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
-                      {item.associatedImage && (
-                        <a
-                          href="#"
-                          onClick={() => {setOpenImage(true); setImageToView(item.associatedImage)}}
-                        >
-                          <img src={imageURL} alt="Report" style={{ width: 90, height: 'auto', resizeMode: 'cover' }} />
-                          <span style={{ textDecoration: 'underline', color: 'blue', cursor: 'pointer' }}></span>
-                        </a>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    <MdDelete onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} style={{ cursor: 'pointer', marginLeft: '14px', color: 'red', fontSize: '20px'}} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-         }
-         {isUncollected &&
-          <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-            <thead>
-              <tr>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }} onClick={handleSort}>
-                 Date<br />Reported {sortDirection === 'asc' ? '▲' : '▼'}
-                </th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Time Reported</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Location</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th> {/* New column for Status */}
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Image</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody className="reportTableBody" style={{ width: 2000 }}>
-              {filteredReports.map((item) => (
-                <tr key={item.id} className="tableRow">
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
-                  </td>
-                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                  {item.highlightedDate ? (
-                    <span dangerouslySetInnerHTML={{ __html: item.highlightedDate }} style={{ color: 'green' }} />
-                  ) : (
-                    <>{formatDateTime(item.dateTime)}</>
-                  )}
-                </td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {item.highlightedLocation ? (
-                      <span dangerouslySetInnerHTML={{ __html: item.highlightedLocation }} style={{ color: 'green' }} />
-                    ) : (
-                      <>{item.location}</>
-                    )}
-                  </td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>{reportStatus[item.id]}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    {reportImage.map((url) => {
-                      if(url.includes(item.associatedImage)) {
-                          imageURL = url;
-                      }
-                    })}
-                    <div style={{ width: '100%', height: 50, borderStyle: 'solid', borderWidth: 0, borderRightWidth: 1, borderColor: 'rgb(220,220,220)', overflow: 'hidden' }}>
-                      {item.associatedImage && (
-                        <a
-                          href="#"
-                          onClick={() => {setOpenImage(true); setImageToView(item.associatedImage)}}
-                        >
-                          <img src={imageURL} alt="Report" style={{ width: 90, height: 'auto', resizeMode: 'cover' }} />
-                          <span style={{ textDecoration: 'underline', color: 'blue', cursor: 'pointer' }}></span>
-                        </a>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                    <MdDelete onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} style={{ cursor: 'pointer', marginLeft: '14px', color: 'red', fontSize: '20px'}} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-         }
-
         </div>
       </div>
     </>

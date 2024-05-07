@@ -9,7 +9,8 @@ import EditIcon from '@mui/icons-material/Edit';
 
 export default function Profile() {
     const [userProfile, setUserProfile] = useState(null);
-    //const [editedAddress, setEditedAddress] = useState('');
+    const [editedFirstName, setEditedFirstName] = useState('');
+    const [editedLastName, setEditedLastName] = useState('');
     const [editedEmail, setEditedEmail] = useState('');
     const [editedContactNo, setEditedContactNo] = useState('');
     const [editedLGUCode, setEditedLGUCode] = useState('');
@@ -33,8 +34,10 @@ export default function Profile() {
               const doc = querySnapshot.docs[0];
               const { firstName, lastName, accountType, barangay, municipality, province, email, contactNo, lguCode } = doc.data();
               const displayName = `${firstName} ${lastName}`;
-    
-              setUserProfile({ displayName, accountType, barangay, municipality, province, email, contactNo, lguCode });
+      
+              setUserProfile({ firstName, lastName, displayName, accountType, barangay, municipality, province, email, contactNo, lguCode });
+              setEditedFirstName(firstName);
+              setEditedLastName(lastName);
               setEditedBarangay(barangay);
               setEditedMunicipality(municipality);
               setEditedProvince(province);
@@ -51,39 +54,33 @@ export default function Profile() {
           console.error("Error fetching user profile:", error);
         }
       };
-    
+      
       fetchUserProfile();
-    
-      return () => {
-        // Cleanup function if needed
-      };
     }, [auth]);
     
 
     const handleSaveProfile = async () => {
       try {
-          // Query the collection to find the document with the user's email
           const userRef = query(collection(db, "users"), where('email', '==', userProfile.email));
           const querySnapshot = await getDocs(userRef);
   
-          // Ensure the query result is not empty and extract the document ID (UID)
           if (!querySnapshot.empty) {
               const doc = querySnapshot.docs[0];
               const userId = doc.id;
   
-              // Update the document with the extracted UID
-              const userDocRef = doc(db, `users/${userId}`); // Corrected line
+              const userDocRef = doc(db, `users/${userId}`);
               await updateDoc(userDocRef, {
+                  firstName: editedFirstName,
+                  lastName: editedLastName,
                   barangay: editedBarangay,
                   municipality: editedMunicipality,
                   province: editedProvince,
                   email: editedEmail,
                   contactNo: editedContactNo,
-                  lguCode: editedLGUCode, // Add LGU Code update
+                  lguCode: editedLGUCode,
               });
               console.log("Profile updated successfully!");
-              setIsEditMode(false); // Exit edit mode upon successful save
-              // Optionally, refetch or update local state to reflect changes
+              setIsEditMode(false);
               alert("Profile updated successfully!");
           } else {
               console.log("No user document found for the email:", userProfile.email);
@@ -123,6 +120,8 @@ export default function Profile() {
               <div style={{ display: 'flex', flexDirection: 'column', width: '100%', borderStyle: "solid", borderWidth: 1, borderColor: 'green', paddingTop: 15, paddingBottom: 20 }}>
                 <div style={{ display: 'flex', flexDirection: 'row', flex: 1, marginLeft: 20 }}>
                   <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 43, paddingTop: 26 }}>
+                    <p className="form-label">First Name</p>
+                    <p className="form-label">Last Name</p>
                     <p className="form-label">Barangay</p>
                     <p className="form-label">Municipality</p>
                     <p className="form-label">Province</p>
@@ -133,9 +132,11 @@ export default function Profile() {
                     )}
                   </div>
                   <div style={{ display: 'flex', flex: 3, flexDirection: 'column', gap: 20, paddingTop: 10, paddingRight: 20 }}>
+                    <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedFirstName} onChange={(e) => setEditedFirstName(e.target.value)} readOnly={!isEditMode} />
+                    <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedLastName} onChange={(e) => setEditedLastName(e.target.value)} readOnly={!isEditMode} />
                     <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedBarangay} onChange={(e) => setEditedBarangay(e.target.value)} readOnly={!isEditMode} />
                     <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedMunicipality} onChange={(e) => setEditedMunicipality(e.target.value)} readOnly={!isEditMode} />
-                    <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedProvince} onChange={(e) => setEditedProvince(e.target.value)} readOnly={!isEditMode} />
+                  <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedProvince} onChange={(e) => setEditedProvince(e.target.value)} readOnly={!isEditMode} />
                     <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedEmail} onChange={(e) => setEditedEmail(e.target.value)} readOnly={!isEditMode} />
                     <input className={`form-input ${!isEditMode ? 'form-input-read-only' : ''}`} type="text" value={editedContactNo} onChange={(e) => setEditedContactNo(e.target.value)} readOnly={!isEditMode} />
                     {userProfile?.accountType === "LGU / Waste Management Head" && (
