@@ -3,6 +3,7 @@ import { FaSearch, FaBell } from 'react-icons/fa';
 import { getFirestore, collection, getDocs } from 'firebase/firestore'; 
 import '../styleSheet/dashTabStyle.css';
 import { auth } from '../firebase-config';
+import Notification from './Notification';
 
 export default function Dashboard() {
   const [users, setUsers] = useState([]);
@@ -11,7 +12,11 @@ export default function Dashboard() {
   const [reportsToday, setReportsToday] = useState(0); 
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
+  const toggleNotification = () => {
+    setIsNotificationOpen(!isNotificationOpen);
+  };
   const handleSearch = () => {
     const filteredUsers = users.filter((user) => {
         const name = `${user.firstName} ${user.lastName}`.toLowerCase();
@@ -126,9 +131,10 @@ export default function Dashboard() {
               </button>
 
             </div>
-            <button className="notifIcon">
+            <button className="notifIcon" onClick={toggleNotification}>
               <FaBell />
             </button>
+            <Notification isOpen={isNotificationOpen} onClose={toggleNotification} />
           </div>
         </div>
         <h4 style={{ fontFamily: 'Inter', color: 'rgb(50, 50, 50)', fontWeight: 800, marginBottom: 5 }}>Summary</h4>

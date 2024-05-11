@@ -5,6 +5,8 @@ import '../styleSheet/schedTabStyle.css';
 import { db } from '../firebase-config';
 import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
 import { FaSearch, FaBell } from 'react-icons/fa';
+import Notification from './Notification';
+
 
   export default function Schedule() {
     const [scheduleData, setScheduleData] = useState([]);
@@ -23,12 +25,16 @@ import { FaSearch, FaBell } from 'react-icons/fa';
     const [eventsLength, setEventsLength] = useState(0);
     const [assignmentsLength, setAssignmentsLength] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
 
     const scheduleCollection = collection(db, 'schedule');
 
     const [sortOrder, setSortOrder] = useState('');
-
+    
+    const toggleNotification = () => {
+        setIsNotificationOpen(!isNotificationOpen);
+      };
     const handleSearch = () => {
       if (searchTerm.trim() === '') {
         setAllSchedulesData(scheduleData);
@@ -294,9 +300,14 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                   <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
-                  <FaSearch style={{ fontSize: 20 }} />
+                  <FaSearch style={{ fontSize: 20}} />
               </button>
+              <button className="notifIcon" onClick={toggleNotification}>
+                <FaBell />
+              </button>
+            <Notification isOpen={isNotificationOpen} onClose={toggleNotification} />
           </div>
+        
           <div className="schedule-container">
             <div className="schedule-Total" >
               <p style={{ marginTop: 20, display: 'flex', fontFamily: 'Inter', justifyContent: 'center', fontWeight: 600 }}>Total Collection</p>
@@ -312,29 +323,29 @@ import { FaSearch, FaBell } from 'react-icons/fa';
             </div>
           </div>
           <div style={{ marginTop: 230 }}>
-            <div className="filterSchedule" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <button className="allschedules" onClick={handleAllSchedulesButtonClick} style={{ width: '10%' }}>
+            <div className="filterSchedule" style={{ display: 'flex', justifyContent: 'left' }}>
+              <button className="allschedules" onClick={handleAllSchedulesButtonClick} style={{ width: '40px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>All</p>
                   </div>
                 </div>
               </button>
-              <button className="collection" onClick={handleCollectionButtonClick} style={{ width: '10%' }}>
+              <button className="collection" onClick={handleCollectionButtonClick} style={{ width: '86px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>Collection</p>
                   </div>
                 </div>
               </button>
-              <button className="events" onClick={handleEventsButtonClick} style={{ width: '10%' }}>
+              <button className="events" onClick={handleEventsButtonClick} style={{ width: '65px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>Events</p>
                   </div>
                 </div>
               </button>
-              <button className="assignments" onClick={handleAssignmentsButtonClick} style={{ width: '20%' }}>
+              <button className="assignments" onClick={handleAssignmentsButtonClick} style={{ width: '100px' }}>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <p style={{ padding: 5, margin: 0, marginBottom: 3, fontWeight: 600 }}>Assignments</p>
@@ -531,7 +542,6 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                         </td>
                           <td>{assignment.assignCollector || assignment.assignedTruck || 'N/A'}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
                             <MdDelete style={{ fontSize: '24px', color: 'red' }} onClick={() => deleteSchedule(assignment.id)} /> {/* Delete icon */}
                           </td>
                         </tr>

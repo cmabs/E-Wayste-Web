@@ -533,4 +533,18 @@ border-radius: 20px;
 .colschedule-table::-webkit-scrollbar-thumb:active {
   background-color: rgb(170, 170, 170);
 }
+.collectButton {
+  background-color: green;
+  color: white;
+  font-weight: 600;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 10px;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  cursor: pointer;
+}
 
+.collectButton:hover {
+  background-color: rgb(84, 161, 84);
+}

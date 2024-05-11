@@ -11,6 +11,7 @@ import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
+import Notification from './Notification';
 
 
 export default function UserManage() {
@@ -23,6 +24,7 @@ export default function UserManage() {
   const [sortOrder, setSortOrder] = useState('asc'); 
   const [selectedAccountType, setSelectedAccountType] = useState('All'); 
   const [searchTerm, setSearchTerm] = useState('');
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
 
   let imageURL, viewImageURL;
@@ -31,7 +33,10 @@ export default function UserManage() {
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "userWorkID/");
 
-  
+  const toggleNotification = () => {
+    setIsNotificationOpen(!isNotificationOpen);
+  };
+
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
       fetchUsers(); // Fetch users again to reset the search
@@ -328,9 +333,10 @@ export default function UserManage() {
                   <FaSearch style={{ fontSize: 20 }} />
               </button>
             </div>
-            <button className="notifIcon">
+            <button className="notifIcon" onClick={toggleNotification}>
               <FaBell />
             </button>
+            <Notification isOpen={isNotificationOpen} onClose={toggleNotification} />
           </div>
           {!isPendingUsers && (
           <div style={{ marginBottom: -40, marginTop: 20,display:'flex', marginLeft: 700, fontFamily: 'Inter', fontSize: 14}}>

@@ -8,6 +8,7 @@ import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
 import { Button } from "@mui/material";
+import Notification from './Notification';
 
 export default function Report() {
   const [userReports, setUserReports] = useState([]);
@@ -22,6 +23,7 @@ export default function Report() {
   const [totalReports, setTotalReports] = useState(0);
   const [reports, setReports] = useState([]);
   const [usersData, setUsersData] = useState({});
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   
   const storage = getStorage();
   let imageURL, viewImageURL;
@@ -31,7 +33,9 @@ export default function Report() {
   const imageColRef = ref(storage, "postImages/");
   const [reportImage, setReportImage] = useState([]);
 
-  
+  const toggleNotification = () => {
+    setIsNotificationOpen(!isNotificationOpen);
+  };
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -269,7 +273,11 @@ export default function Report() {
         <>
         <div style={{ marginLeft: 40, width: 1100 }}>
           <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-            <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>Garbage Reports</h1>
+            <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 9550 }}>Garbage Reports</h1>
+            <button className="notifIcon" onClick={toggleNotification} style={{ marginLeft: 600, marginTop: 20 }}>
+              <FaBell />
+            </button>
+            <Notification isOpen={isNotificationOpen} onClose={toggleNotification} />
             <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', gap: 20 }}>
             <div className="summary-con">
               {Summary()}
