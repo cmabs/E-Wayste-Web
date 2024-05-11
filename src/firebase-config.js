@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import { getMessaging } from "firebase/messaging";
 
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
@@ -22,5 +23,7 @@ const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const messaging = getMessaging(app); 
 
-export { db, auth, storage, firebase };
+
+export { db,app, auth, storage,messaging, firebase };

@@ -305,8 +305,8 @@ export default function Report() {
               {filteredReports.map((item) => (
                 <tr key={item.id} className="tableRow">
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-          {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
-        </td>
+                  {item.userId && usersData[item.userId] ? `${usersData[item.userId]?.firstName || ''} ${usersData[item.userId]?.lastName || ''}` : 'N/A'}
+                </td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatDateTime(item.dateTime)}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatTime(item.dateTime)}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>

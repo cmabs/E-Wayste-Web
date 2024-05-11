@@ -54,8 +54,6 @@
     transition: 0.5s;
 }
 
-
-
 .collectionB button {
     display: flex;
     flex-direction: column;
@@ -73,4 +71,40 @@
 }
 .collectionB button:hover {
     background-color: rgb(233, 250, 206);
+}
+
+.map-filter-buttons {
+    margin-left: -330px;
+    display: flex;
+    gap: 10px;
+}
+
+.map-filter-buttons button {
+    padding: 8px 16px;
+    border: none;
+    margin-bottom: -40px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.map-filter-buttons button.uncollected {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    font-weight:bold;
+}
+
+.map-filter-buttons button.collected {
+    background-color: rgb(201, 201, 201);
+    
+    color: black;
+    font-weight:bold;
+}
+
+.map-filter-buttons button:hover {
+    opacity: 0.8;
+}
+
+.map-filter-buttons button:focus {
+    outline: none;
 }
