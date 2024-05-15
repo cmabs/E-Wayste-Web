@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import '../styleSheet/report.css';
 import { db } from '../firebase-config';
+import { FormControl, Select, MenuItem, Button } from '@mui/material';
 import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, where, query  } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
-import { Button } from "@mui/material";
 import Notification from './Notification';
 
 export default function Report() {
@@ -23,6 +23,9 @@ export default function Report() {
   const [totalReports, setTotalReports] = useState(0);
   const [reports, setReports] = useState([]);
   const [usersData, setUsersData] = useState({});
+  const [reportStatus, setReportStatus] = useState({}); // New state for storing report status
+  const [filterValue, setFilterValue] = useState('all'); // State to store the selected filter value
+  const [summaryFilteredReports, setSummaryFilteredReports] = useState([]); 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   
   const storage = getStorage();
@@ -187,6 +190,20 @@ export default function Report() {
       }
     };
 
+    const handleFilterChange = (event) => {
+      const selectedValue = event.target.value;
+    
+      setFilterValue(selectedValue); // Update the filter value when the dropdown value changes
+      if (selectedValue === 'all') {
+        setFilteredReports(originalUserReports); // Show all reports
+        setSummaryFilteredReports(originalUserReports); // Update the filtered reports for the Summary component
+      } else {
+        const filteredReports = originalUserReports.filter(report => report.status === selectedValue);
+        setFilteredReports(filteredReports); // Show reports with the selected status
+        setSummaryFilteredReports(filteredReports); // Update the filtered reports for the Summary component
+      }
+    };
+
     const handleSort = () => {
       const sortedReports = [...filteredReports].sort((a, b) => {
         const dateA = new Date(a.dateTime);
@@ -297,6 +314,25 @@ export default function Report() {
                     <FaSearch style={{ fontSize: 20 }} />
                   </button>
                   <Button style={{ backgroundColor: '#51AF5B', marginLeft: 8, color: 'white', borderRadius: 13}} onClick={handleSort}>Sort</Button>
+                  <FormControl sx={{ minWidth: 150, marginLeft: 80 }}> {/* Adjust the minWidth value as needed */}
+                    <Select
+                      style={{
+                        borderRadius: 20,
+                        height: 40,
+                        color: 'green',
+                        fontFamily: 'Inter',
+                        cursor: 'pointer',
+                      }}
+                      labelId="filter-label"
+                      id="filter"
+                      value={filterValue}
+                      onChange={handleFilterChange}
+                    >
+                      <MenuItem value="all">All</MenuItem>
+                      <MenuItem value="collected">Collected</MenuItem>
+                      <MenuItem value="uncollected">Uncollected</MenuItem>
+                    </Select>
+                  </FormControl>
             </div>
           <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
             <thead>

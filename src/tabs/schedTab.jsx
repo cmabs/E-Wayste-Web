@@ -405,7 +405,6 @@ import Notification from './Notification';
                           </td>
                           <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> 
                             <MdDelete style={{ fontSize: '24px', color: 'red' }}  onClick={() => deleteSchedule(schedule.id)}/> 
                           </td>
                         </tr>
@@ -458,7 +457,6 @@ import Notification from './Notification';
                           </td>
                         <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td> {/* Modified line */}
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} />
                             <MdDelete style={{ fontSize: '24px', color: 'red' }}  onClick={() => deleteSchedule(schedule.id)}/>
                           </td>
                         </tr>
@@ -500,7 +498,6 @@ import Notification from './Notification';
                           )}
                         </td>
                           <td>
-                            <MdOutlineModeEdit style={{ fontSize: '24px', color: 'green' }} /> {/* Edit icon */}
                             <MdDelete style={{ fontSize: '24px', color: 'red' }} onClick={() => deleteSchedule(event.id)} /> {/* Delete icon */}
                           </td>
                         </tr>
