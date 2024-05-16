@@ -7,6 +7,7 @@ import { MdOutlineModeEdit, MdDelete, MdPlace } from 'react-icons/md';
 import AddSchedModal from "../Modals/AddSched";
 import EditSchedModal from "../Modals/EditSched"; 
 import { FaSearch, FaBell } from 'react-icons/fa';
+import { LocationOn } from '@mui/icons-material';
 
   export default function Schedule() {
     const [scheduleData, setScheduleData] = useState([]);
@@ -446,14 +447,27 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                           <td>{schedule.startTime}</td>
                           <td>
                           {schedule.highlightedLocation ? (
-                            <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
-                          ) : (
-                            <span>
-                              {schedule.location && schedule.location}
-                              {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
-                                getRouteLocationNames(schedule.collectionRoute.coordinates)}
-                            </span>
-                          )}
+                              <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
+                            ) : (
+                              <div>
+                                {schedule.location && (
+                                  <div>
+                                    <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                    {schedule.location}
+                                  </div>
+                                )}
+                                {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
+                                  <div>
+                                    {schedule.collectionRoute.coordinates.map((coord, index) => (
+                                      <div key={index}>
+                                        <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                        {coord.locationName}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                         </td>
                           <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td>
                           <td>
@@ -492,14 +506,21 @@ import { FaSearch, FaBell } from 'react-icons/fa';
                           <td>{schedule.startTime}</td>
                           <td>
                           {schedule.highlightedLocation ? (
-                            <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
-                          ) : (
-                            <span>
-                              {schedule.location && schedule.location}
-                              {schedule.collectionRoute && schedule.collectionRoute.coordinates && 
-                                getRouteLocationNames(schedule.collectionRoute.coordinates)}
-                            </span>
-                          )}
+                              <span dangerouslySetInnerHTML={{ __html: schedule.highlightedLocation }}></span>
+                            ) : (
+                              <div>                       
+                                {schedule.collectionRoute && schedule.collectionRoute.coordinates && (
+                                  <div>
+                                    {schedule.collectionRoute.coordinates.map((coord, index) => (
+                                      <div key={index}>
+                                        <MdPlace style={{ marginRight: '2px', color: 'red' }} /> 
+                                        {coord.locationName}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                         </td>
                         <td>{schedule.assignCollector || schedule.assignedTruck || 'N/A'}</td> {/* Modified line */}
                           <td>

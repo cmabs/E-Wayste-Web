@@ -89,8 +89,6 @@ export default function Report() {
     fetchReports();
   }, []);
 
-  const collectedPercentage = totalReports !== 0 ? (collectedCount / totalReports) * 100 : 0;
-  const uncollectedPercentage = totalReports !== 0 ? (uncollectedCount / totalReports) * 100 : 0;
 
   useEffect(() => {
     const fetchUserReports = async () => {
