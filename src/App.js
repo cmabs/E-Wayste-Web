@@ -8,7 +8,7 @@ import Home from './pages/homePage';
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  /*const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const inactivityTimeout = 10 * 60 * 1000;
   let inactivityTimer;
@@ -46,7 +46,7 @@ export default function App() {
 
   if (!isLoggedIn) {
     return <Navigate to="/" />;
-  }*/
+  }
 
   return (
     <Routes>

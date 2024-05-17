@@ -37,6 +37,20 @@ export default function UserManage() {
     setIsNotificationOpen(!isNotificationOpen);
   };
 
+  useEffect(() => {
+    console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
+    fetchUsers();
+  }, [isPendingUsers]);
+
+  useEffect(() => {
+    if (isPendingUsers) {
+      const pendingUsersCount = users.filter(user => user.accountType === 'LGU / Waste Management Head').length;
+      setUserTotal(pendingUsersCount);
+    } else {
+      setUserTotal(users.length);
+    }
+  }, [users, isPendingUsers]);
+
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
       fetchUsers(); // Fetch users again to reset the search
@@ -218,9 +232,11 @@ export default function UserManage() {
   
 
   function UserListContent() {
-    const filteredUsers = selectedAccountType === 'All'
-    ? users
-    : users.filter((user) => user.accountType === selectedAccountType);
+    const filteredUsers = isPendingUsers
+      ? users.filter((user) => user.accountType === 'LGU / Waste Management Head')
+      : selectedAccountType === 'All'
+      ? users
+      : users.filter((user) => user.accountType === selectedAccountType);
     return (
       <ul style={{ listStyleType: 'none', padding: 0 }}>
         {filteredUsers.map((user, userID) => (
