@@ -181,88 +181,105 @@ export default function AddSchedModal({ isOpen, handleClose }) {
 
   const handleSave = async () => {
     try {
-        const formattedStartTime = formatTime(startTime);
-        const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD hh:mm:ss a');
-
-        if (!selectedType) {
-            alert("Please select a schedule type.");
-            return;
+      const formattedStartTime = formatTime(startTime);
+      const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD hh:mm:ss a');
+  
+      if (!selectedType) {
+        alert("Please select a schedule type.");
+        return;
+      }
+  
+      if (selectedType === "Collection" || selectedType === "Assignment") {
+        if (!selectedTruck) {
+          alert("Please select a garbage truck.");
+          return;
         }
-
-        if (selectedType === "Collection" || selectedType === "Assignment") {
-            if (!selectedTruck) {
-                alert("Please select a garbage truck.");
-                return;
-            }
-            if (selectedType === "Collection" && collectionRoute.coordinates.length === 0) {
-                alert("Please add at least one location for collection.");
-                return;
-            }
-            if (collectionRoute.coordinates.some(coord => !coord.latitude || !coord.longitude)) {
-                alert("Please select locations properly.");
-                return;
-            }
-        } else {
-            if (!location) {
-                alert("Please enter a location.");
-                return;
-            }
-            if (!latitude || !longitude) {
-                alert("Please select a location properly.");
-                return;
-            }
+        if (selectedType === "Collection" && collectionRoute.coordinates.length === 0) {
+          alert("Please add at least one location for collection.");
+          return;
         }
-        let scheduleData = {
-          assignedTruck: selectedTruck,
-          dateTimeUploaded: fullDateTime,
-          description: description || 'N/A',
-          title: title || 'N/A',
-          selectedDate,
-          startTime: formattedStartTime,
+        if (collectionRoute.coordinates.some(coord => !coord.latitude || !coord.longitude)) {
+          alert("Please select locations properly.");
+          return;
+        }
+      } else {
+        if (!location) {
+          alert("Please enter a location.");
+          return;
+        }
+        if (!latitude || !longitude) {
+          alert("Please select a location properly.");
+          return;
+        }
+      }
+  
+      let scheduleData;
+  
+      if (selectedType === 'Collection') {
+        scheduleData = {
+          scheduleID: generateUniqueScheduleID(),
           type: selectedType,
+          description: description || 'N/A',
+          startTime: formattedStartTime,
           userID: userData ? userData.userID : null,
-          collectionRoute: selectedType === "Collection" ? collectionRoute : { coordinates: [] },
-          collectionRecord: selectedType === "Assignment" ? {
-              status: 'uncollected',
-              dateTimeCollected: ''
-          } : null
-      };      
-
-        // Include location data if not Collection type
-        if (selectedType !== "Collection") {
-            scheduleData = {
-                ...scheduleData,
-                location: location,
-                latitude: latitude,
-                longitude: longitude,
-            };
-        } else {
-            scheduleData = {
-                ...scheduleData,
-                location: "",
-                latitude: "",
-                longitude: "",
-            };
-        }
-
-        // Add scheduleData to Firestore
-        await addDoc(collection(db, 'schedule'), scheduleData);
-        alert("Schedule successfully added!");
-
-        // Clear form fields and state
-        setSelectedType("");
-        setSelectedTruck("");
-        setLocation("");
-        setSelectedDate("");
-        setStartTime("");
-        setDescription("");
-        setLocations([]);
-        setCollectionRoute({ coordinates: [] });
+          assignedTruck: selectedTruck,
+          selectedDate,
+          collectionRoute,
+          dateTimeUploaded: fullDateTime,
+          collectionRecord: [],
+          visibility: 'enable'
+        };
+      } else if (selectedType === 'Assignment') {
+        scheduleData = {
+          scheduleID: generateUniqueScheduleID(),
+          type: selectedType,
+          description: description || 'N/A',
+          startTime: formattedStartTime,
+          userID: userData ? userData.userID : null,
+          assignedTruck: selectedTruck,
+          selectedDate,
+          location,
+          latitude,
+          longitude,
+          dateTimeUploaded: fullDateTime,
+          collectionRecord: {
+            status: 'uncollected',
+            dateTimeCollected: ''
+          }
+        };
+      } else if (selectedType === 'Event') {
+        scheduleData = {
+          scheduleID: generateUniqueScheduleID(),
+          type: selectedType,
+          description: description || 'N/A',
+          startTime: formattedStartTime,
+          title: title || 'N/A',
+          userID: userData ? userData.userID : null,
+          location,
+          latitude,
+          longitude,
+          selectedDate,
+          dateTimeUploaded: fullDateTime
+        };
+      }
+  
+      // Add scheduleData to Firestore
+      await addDoc(collection(db, 'schedule'), scheduleData);
+      alert("Schedule successfully added!");
+  
+      // Clear form fields and state
+      setSelectedType("");
+      setSelectedTruck("");
+      setLocation("");
+      setSelectedDate("");
+      setStartTime("");
+      setDescription("");
+      setLocations([]);
+      setCollectionRoute({ coordinates: [] });
     } catch (error) {
-        console.error("Error saving schedule:", error);
+      console.error("Error saving schedule:", error);
     }
-};
-
+  };
 
   
   return (

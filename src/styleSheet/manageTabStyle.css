@@ -165,11 +165,11 @@ button.editB {
 .pending-users-button {
   position: absolute;
   top: 130px;
-  left: 1180px;
+  left: 1040px;
   background-color: green;
   color: white;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 8px 18px;
   border-radius: 10px;
   border: none;
   cursor: pointer;
@@ -178,14 +178,38 @@ button.editB {
 .add-users-button {
   position: absolute;
   top: 130px;
-  left: 1330px;
+  left: 1180px;
   background-color: #F2BE2D;
   color: white;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 8px 18px;
   border-radius: 10px;
   border: none;
   cursor: pointer;
+}
+.add-col-button {
+  position: absolute;
+  top: 130px;
+  left: 1300px;
+  background-color: darkorange;
+  color: white;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.add-users-button:hover {
+  background-color:  #F2BE2D;
+  transition: background-color 0.3s ease-in-out;
+  transform: scale(1.05);
+}
+
+.add-col-button:hover {
+  background-color: darkorange;
+  transition: background-color 0.3s ease-in-out;
+  transform: scale(1.05);
 }
 
 .pending-users-button:hover {
@@ -241,6 +265,15 @@ button.editB {
   border-radius: 20px;
 }
 
+.add-colUsers {
+  position: absolute;
+  width: 600px;
+  height: 100%;
+  background: #F4FDF0;
+  border-radius: 20px;
+}
+
+
 .edit-truckModal {
   position: absolute;
   width: 600px;
@@ -261,11 +294,29 @@ label {
   margin-bottom: 5px; /* Adjust as needed */
   margin-left: 20px;
 }
+.label-addCol {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #333; /* Set the desired color */
+  margin-bottom: 3px; /* Adjust as needed */
+  margin-left: 20px;
+  
+}
 
 .input-addtruck {
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   padding: 8px; /* Adjust padding as needed */
+  border: 1px solid #ccc; /* Set the desired border color */
+  border-radius: 4px; /* Adjust border-radius as needed */
+  margin-bottom: 15px; /* Adjust as needed */
+  margin-left: 20px;
+  width: 535px;
+}
+.input-addCol {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  padding: 7px; /* Adjust padding as needed */
   border: 1px solid #ccc; /* Set the desired border color */
   border-radius: 4px; /* Adjust border-radius as needed */
   margin-bottom: 15px; /* Adjust as needed */
@@ -282,6 +333,11 @@ label {
 .input-group {
   display: flex;
   flex-direction: column;
+}
+.input-groupCollector {
+  display: flex;
+  flex-direction: column;
+
 }
 
 /* Style for the Cancel button */

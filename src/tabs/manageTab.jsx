@@ -6,7 +6,9 @@ import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, quer
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AddTruckModal from "../Modals/AddTruck";
+import AddCollectorModal from "../Modals/AddCollector";
 import EditTruckModal from '../Modals/EditTruck';
+
 
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
 import { ImCheckmark } from 'react-icons/im';
@@ -31,6 +33,7 @@ export default function UserManage() {
   const [isEditTruckOpen, setIsEditTruckOpen] = useState(false);
   const [selectedTruck, setSelectedTruck] = useState(null);
   const [isAddTruckOpen, setAddTruckOpen] =useState(false);
+  const [isAddCollectorOpen, setAddCollectorOpen]= useState(false);
   const [selectedSection, setSelectedSection] = useState("collector");  
   const [isCollectorOpen, setIsCollectorOpen] = useState(true); 
   const [isUsersListOpen, setIsUsersListOpen]  =useState(true);
@@ -152,6 +155,7 @@ export default function UserManage() {
 
   const handleCloseModal = () => {
     setAddTruckOpen(false);
+    setAddCollectorOpen(false);
   };
   
   const toggleUserListVisibility = () => {
@@ -358,20 +362,29 @@ export default function UserManage() {
     event.preventDefault();
     try {
       const firestore = getFirestore();
-      
+      const auth = getAuth();
+  
+      // Reference to the pending user document
       const pendingUserRef = doc(firestore, 'pendingUsers', userId);
       const pendingUserSnapshot = await getDoc(pendingUserRef);
-      
+  
       if (pendingUserSnapshot.exists()) {
         const userData = pendingUserSnapshot.data();
-        
+  
+        const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+        const authUser = userCredential.user;
+  
         const usersCollection = collection(firestore, 'users');
-        await addDoc(usersCollection, userData);
-        
+        await addDoc(usersCollection, {
+          uid: authUser.uid,
+          email: userData.email,
+          ...userData,
+        });
+  
         await deleteDoc(pendingUserRef);
+  
+        console.log('User approved and saved in Firebase Authentication and Firestore successfully!');
         
-        console.log('User approved successfully!');
-      
         fetchUsers();
       } else {
         console.error('User not found in pendingUsers collection.');
@@ -380,8 +393,6 @@ export default function UserManage() {
       console.error('Error approving user:', error);
     }
   };
-  
-  
   
   const handleRejectUser = async (event, userId) => {
     event.preventDefault();
@@ -400,6 +411,10 @@ export default function UserManage() {
 
   const handleAddTruckClick =() =>{
     setAddTruckOpen(!isAddTruckOpen);
+  }
+
+  const handleAddCollectorClick =() =>{
+    setAddCollectorOpen(!isAddCollectorOpen);
   }
   
   function UserListContent() {
@@ -479,10 +494,17 @@ export default function UserManage() {
                 }}> Trucks</div>
             </>
           )}
-        <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
+         <button className="add-col-button" onClick={handleAddCollectorClick}>Add Collector +</button>
+         <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
+         
           {isAddTruckOpen && (
               <div className="modal-overlay"> 
                   <AddTruckModal isOpen={isAddTruckOpen} handleClose={handleCloseModal} />
+              </div>
+            )}
+            {isAddCollectorOpen && (
+              <div className="modal-overlay"> 
+                  <AddCollectorModal isOpen={isAddCollectorOpen} handleClose={handleCloseModal} />
               </div>
             )}
             {isEditTruckOpen && (
