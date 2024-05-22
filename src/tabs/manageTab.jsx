@@ -212,8 +212,9 @@ export default function UserManage() {
       const filteredUsers = users.filter(user => user.accountType === 'Garbage Collector');
   
       return (
+        <div>
         <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
+          <thead style={{ height:50}}>
             <tr>
               <th>Name</th>
               <th>Username</th>
@@ -223,9 +224,9 @@ export default function UserManage() {
               <th>Action</th>
             </tr>
           </thead>
-          <tbody className="reportTableBody">
+          <tbody className="reportTableBody" >
             {filteredUsers.map((user) => (
-              <tr key={user.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+              <tr key={user.id} style={{ border: '1px solid #ddd', textAlign: 'center', height: 50}}>
                <td style={{ borderRight: '1px solid #ddd' }}>
                 {user.highlightedName ? (
                   <span dangerouslySetInnerHTML={{ __html: user.highlightedName }} style={{ color: 'green' }} />
@@ -247,11 +248,12 @@ export default function UserManage() {
             ))}
           </tbody>
         </table>
+        </div>
       );
     } else if (selectedSection === "trucks" && isTruckOpen) {
       return (
         <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
+          <thead style={{height: 50}}>
             <tr>
               <th>Plate No.</th>
               <th>Driver Name</th>
@@ -262,7 +264,7 @@ export default function UserManage() {
           <tbody className="reportTableBody">
             {trucks.map((truck) => {
               return (
-                <tr key={truck.id} style={{ border: '1px solid #ddd', textAlign: 'center'}}>
+                <tr key={truck.id} style={{ border: '1px solid #ddd', textAlign: 'center', height: 50}}>
                   <td style={{ borderRight: '1px solid #ddd' }}>{truck.plateNo}</td>
                   <td style={{ borderRight: '1px solid #ddd'}}>
                     {getDriverName(truck.driverID) ? (
@@ -492,11 +494,14 @@ export default function UserManage() {
               <div className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
                 onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
                 }}> Trucks</div>
+                 <div  style={{ marginLeft: 80}}className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
+                onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
+                }}> Barangay</div>
             </>
           )}
-         <button className="add-col-button" onClick={handleAddCollectorClick}>Add Collector +</button>
+          <button className="add-col-button" onClick={handleAddCollectorClick}>Add Collector +</button>
          <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
-         
+
           {isAddTruckOpen && (
               <div className="modal-overlay"> 
                   <AddTruckModal isOpen={isAddTruckOpen} handleClose={handleCloseModal} />

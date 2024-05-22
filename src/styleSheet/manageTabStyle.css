@@ -243,12 +243,47 @@ button.editB {
 }
 
 .reportTable {
-  background: #F6F6F6;
+  border: 1px solid #ddd;
+  border-collapse: collapse;
+  width: 100%;
 }
 
-.reportTableBody {
-  background: #F4FDF0;
+.reportTable thead th {
+  height: 50px;
 }
+
+.reportTable tbody tr {
+  border: 1px solid #ddd;
+  text-align: center;
+  height: 50px;
+  transition: transform 0.2s;
+}
+
+.reportTable tbody tr:hover {
+  transform: scale(1.05);
+  background-color: #d0e4b0;
+  border-radius: 10px;
+}
+
+.reportTable td {
+  border-right: 1px solid #ddd;
+  padding: 10px;
+}
+
+.actionIcon {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.actionIcon.edit {
+  color: green;
+  margin-right: 10px;
+}
+
+.actionIcon.delete {
+  color: red;
+}
+
 
 .tableRow:hover {
   background: #BDE47C;

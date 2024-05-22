@@ -403,3 +403,9 @@
   background: #d7f6a6;
   cursor: pointer;
 }
+.year-select,
+.month-select,
+.week-select,
+.day-select {
+  margin-right: 16px; /* Adjust spacing between controls */
+}

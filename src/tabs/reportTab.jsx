@@ -7,7 +7,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 import {  MdDelete } from 'react-icons/md';
-import { Button, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Box , Typography} from '@mui/material';
 
 export default function Report() {
   const [userReports, setUserReports] = useState([]);
@@ -26,6 +26,8 @@ export default function Report() {
   const [usersData, setUsersData] = useState({});
   const [reportStatus, setReportStatus] = useState({}); // New state for storing report status
   const [sortOrder, setSortOrder] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+
 
   const storage = getStorage();
   let imageURL, viewImageURL;
@@ -34,6 +36,75 @@ export default function Report() {
   const [imageToView, setImageToView] = useState();
   const imageColRef = ref(storage, "postImages/");
   const [reportImage, setReportImage] = useState([]);
+
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedWeek, setSelectedWeek] = useState('');
+  const [selectedDay, setSelectedDay] = useState('');
+  const months = Array.from({ length: 12 }, (_, i) => new Date(selectedYear, i).toLocaleString('default', { month: 'long' }));
+  const weeks = Array.from({ length: 52 }, (_, i) => i + 1);
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  
+
+  const handleYearChange = (event) => {
+    const selectedYear = parseInt(event.target.value, 10);
+    setSelectedYear(selectedYear);
+  
+    const filteredReports = originalUserReports.filter(report => {
+      const reportYear = new Date(report.dateTime).getFullYear();
+      return reportYear === selectedYear;
+    });
+  
+    setFilteredReports(filteredReports.length > 0 ? filteredReports : []);
+  };
+  
+  const handleMonthChange = (event) => {
+    const selectedMonth = parseInt(event.target.value, 10);
+    setSelectedMonth(selectedMonth);
+  
+    const filteredReports = originalUserReports.filter(report => {
+      const reportDate = new Date(report.dateTime);
+      return reportDate.getFullYear() === selectedYear && reportDate.getMonth() === selectedMonth;
+    });
+  
+    setFilteredReports(filteredReports.length > 0 ? filteredReports : []);
+  };
+  
+  const handleWeekChange = (event) => {
+    const selectedWeek = parseInt(event.target.value, 10);
+    setSelectedWeek(selectedWeek);
+  
+    const firstDayOfYear = new Date(selectedYear, 0, 1);
+    const firstWeekDay = firstDayOfYear.getDay();
+    const firstWeekOffset = firstWeekDay <= 4 ? -firstWeekDay : 7 - firstWeekDay;
+  
+    const startOfWeek = new Date(selectedYear, 0, 1 + firstWeekOffset + (selectedWeek - 1) * 7);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+    const filteredReports = originalUserReports.filter(report => {
+      const reportDate = new Date(report.dateTime);
+      return reportDate >= startOfWeek && reportDate <= endOfWeek;
+    });
+  
+    setFilteredReports(filteredReports.length > 0 ? filteredReports : []);
+  };
+  
+  const handleDayChange = (event) => {
+    const selectedDay = parseInt(event.target.value, 10);
+    setSelectedDay(selectedDay);
+  
+    const filteredReports = originalUserReports.filter(report => {
+      const reportDate = new Date(report.dateTime);
+      return reportDate.getFullYear() === selectedYear &&
+             reportDate.getMonth() === selectedMonth &&
+             reportDate.getDate() === selectedDay;
+    });
+  
+    setFilteredReports(filteredReports.length > 0 ? filteredReports : []);
+  };
+  
 
   useEffect(() => {
     listAll(imageColRef).then((response) => {
@@ -186,10 +257,12 @@ export default function Report() {
       });
       console.log(`Report with ID ${id} deleted successfully.`);
     } catch (error) {
-      console.error('Error deleting report:', error);
+      console.error('Error  deleting report:', error);
     }
   };
 
+  
+ 
   const handleFilterChange = (event) => {
     const selectedValue = event.target.value;
   
@@ -305,7 +378,70 @@ export default function Report() {
           </div>
         </div>
         <div style={{ marginTop: 290, marginBottom: 40 }}>
-          <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10}}>
+        <Box component="form" sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginTop: 0}}>
+          <label style={{marginTop: 10}}> Filter Date: </label>
+            <FormControl variant="outlined" className="day-select" sx={{ minWidth: 120 }}>
+        <InputLabel id="day-select-label">Day</InputLabel>
+        <Select
+        style={{
+          height: 40,
+          color: 'green',
+          fontFamily: 'Inter',
+          cursor: 'pointer',
+        }}
+          labelId="day-select-label"
+          id="day-select"
+          value={selectedDay}
+          onChange={handleDayChange}
+          label="Day"
+        >
+          {days.map((day, index) => (
+            <MenuItem key={index} value={index}>{day}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl variant="outlined" className="month-select" sx={{ minWidth: 120 }}>
+        <InputLabel id="month-select-label">Month</InputLabel>
+        <Select
+           style={{
+            height: 40,
+            color: 'green',
+            fontFamily: 'Inter',
+            cursor: 'pointer',
+            fontSize:12,
+          }}
+          labelId="month-select-label"
+          id="month-select"
+          value={selectedMonth}
+          onChange={handleMonthChange}
+          label="Month"
+        >
+          {months.map((month, index) => (
+            <MenuItem key={index} value={index}>{month}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl variant="outlined" className="year-select" sx={{ minWidth: 120 }}>
+        <InputLabel id="year-select-label" >Year</InputLabel>
+        <Select
+           style={{
+            height: 40,
+            color: 'green',
+            fontFamily: 'Inter',
+            cursor: 'pointer',
+          }}  
+          labelId="year-select-label"
+          id="year-select"
+          value={selectedYear}
+          onChange={handleYearChange}
+          label="Year"
+        >
+          {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+            <MenuItem key={year} value={year}>{year}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10, marginLeft: 210}}>
             <input
               type="text"
               placeholder="Search by location, or date"
@@ -313,30 +449,34 @@ export default function Report() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+
             <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
               <FaSearch style={{ fontSize: 20 }} />
             </button>
-          <FormControl sx={{ minWidth: 150, marginLeft: 90, }}> {/* Adjust the minWidth value as needed */}
-            <Select
-              style={{
-                borderRadius: 20,
-                height: 40,
-                color: 'green',
-                fontFamily: 'Inter',
-                cursor: 'pointer',
-              }}
-              labelId="filter-label"
-              id="filter"
-              value={filterValue}
-              onChange={handleFilterChange}
-            >
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="collected">Collected</MenuItem>
-              <MenuItem value="uncollected">Uncollected</MenuItem>
-            </Select>
-          </FormControl>
+        </div>
+    </Box>
+    <label style={{marginTop: 100}}> Select: </label>
+    <FormControl sx={{ minWidth: 150, marginLeft: 3 }}>
+      <Select
+        style={{
+          borderRadius: 20,
+          height: 40,
+          color: 'green',
+          fontFamily: 'Inter',
+          cursor: 'pointer',
+        }}
+        labelId="filter-label"
+        id="filter"
+        value={filterValue}
+        onChange={handleFilterChange}
+      >
+        <MenuItem value="all">All</MenuItem>
+        <MenuItem value="collected">Collected</MenuItem>
+        <MenuItem value="uncollected">Uncollected</MenuItem>
+      </Select>
+    </FormControl>
           </div>
-          <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
+          <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%', marginTop: 2 }}>
             <thead>
               <tr>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
@@ -384,7 +524,6 @@ export default function Report() {
             </tbody>
           </table>
         </div>
-      </div>
     </>
   );
 }
