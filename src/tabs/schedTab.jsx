@@ -312,7 +312,7 @@ import { LocationOn } from '@mui/icons-material';
           setEventsData(updatedEventsData);
         } else if (showAssignmentsTable) {
           const updatedAssignmentsData = assignmentsData.filter(schedule => schedule.id !== id);
-          setAssignmentsData(updatedAssignmentsData);
+          setAssignmentsData(updatedAssignmentsData); 
         }
         fetchScheduleData();
         window.alert('Schedule successfully deleted');

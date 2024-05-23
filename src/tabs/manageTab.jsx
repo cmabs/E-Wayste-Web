@@ -8,6 +8,7 @@ import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWith
 import AddTruckModal from "../Modals/AddTruck";
 import AddCollectorModal from "../Modals/AddCollector";
 import EditTruckModal from '../Modals/EditTruck';
+import AddBarangayModal from "../Modals/AddBarangay";
 
 
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
@@ -34,13 +35,63 @@ export default function UserManage() {
   const [selectedTruck, setSelectedTruck] = useState(null);
   const [isAddTruckOpen, setAddTruckOpen] =useState(false);
   const [isAddCollectorOpen, setAddCollectorOpen]= useState(false);
+  const [isAddBrgyOpen, setAddBrgyOpen]= useState(false);
   const [selectedSection, setSelectedSection] = useState("collector");  
   const [isCollectorOpen, setIsCollectorOpen] = useState(true); 
+  const [isBrgyOpen, setIsBrgyrOpen] = useState(true); 
   const [isUsersListOpen, setIsUsersListOpen]  =useState(true);
   const [isTruckOpen, setIsTruckOpen] = useState(false);
   const [isUserListVisible, setUserListVisible] = useState(true);
   const [trucks, setTrucks] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [barangayRepresentatives, setBarangayRepresentatives] = useState([]); // Define state for barangay representatives
+  const [isBarangayOpen, setIsBarangayOpen] = useState(true);
+
+  const fetchBarangayRepresentatives = async (currentUserLguCode) => {
+    try {
+      const firestore = getFirestore();
+      const usersCollection = collection(firestore, 'users');
+      const q = query(usersCollection, 
+                      where('accountType', '==', 'Barangay Representative'),
+                      where('lguCode', '==', currentUserLguCode));
+      const querySnapshot = await getDocs(q);
+      const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return usersData;
+    } catch (error) {
+      console.error('Error fetching barangay representatives:', error);
+      return [];
+    }
+  };
+  useEffect(() => {
+    if (isBrgyOpen) {
+      const fetchData = async () => {
+        try {
+          const representativesData = await fetchBarangayRepresentatives(currentUserLguCode);
+          setBarangayRepresentatives(representativesData);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+  
+      fetchData();
+    }
+  }, [isBrgyOpen, currentUserLguCode]);
+  
+  // Inside useEffect or any appropriate lifecycle hook where you fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const representativesData = await fetchBarangayRepresentatives();
+        // Update state with fetched barangay representative data
+        setBarangayRepresentatives(representativesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+  
 
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
@@ -146,6 +197,8 @@ export default function UserManage() {
       console.error('Error fetching trucks:', error);
     }
   };
+
+  
   
   useEffect(() => {
     if (selectedSection === 'trucks' && isTruckOpen) {
@@ -156,6 +209,7 @@ export default function UserManage() {
   const handleCloseModal = () => {
     setAddTruckOpen(false);
     setAddCollectorOpen(false);
+    setAddBrgyOpen(false);
   };
   
   const toggleUserListVisibility = () => {
@@ -183,6 +237,15 @@ export default function UserManage() {
       setIsTruckOpen(true);
       setUserListVisible(false); 
     }
+    else if (section === "barangay") {
+      setIsCollectorOpen(false);
+      setIsTruckOpen(false);
+      setIsBrgyrOpen(true);
+      setUserListVisible(false); 
+      setUsers([]); 
+      fetchUsers(); 
+    }
+
   };
 
   const handleEditTruck = (truck) => {
@@ -202,7 +265,21 @@ export default function UserManage() {
       console.error('Error deleting truck:', error);
     }
   };
-  
+
+
+  const handleDeleteRepresentative = async (representativeId) => {
+  try {
+    const firestore = getFirestore();
+    const representativeRef = doc(firestore, 'users', representativeId);
+    await deleteDoc(representativeRef);
+    console.log('Representative deleted successfully!');
+    // Fetch updated barangay representatives after deletion
+    const representativesData = await fetchBarangayRepresentatives(currentUserLguCode);
+    setBarangayRepresentatives(representativesData);
+  } catch (error) {
+    console.error('Error deleting representative:', error);
+  }
+};
   
   const renderTableContent = () => {
     if (isPendingUsers) {
@@ -290,8 +367,47 @@ export default function UserManage() {
           </tbody>
         </table>
       );
+    } else if (selectedSection === "Barangay" && isBrgyOpen) {
+      return (
+        <table className="reportTable" style={{ border: '1px solid #ddd', borderCollapse: 'collapse', width: '100%' }}>
+          <thead style={{height: 50}}>
+            <tr>
+              <th>Name</th>
+              <th>Contact No</th>
+              <th>Email</th>
+              <th>Barangay</th>
+              <th>Province</th> 
+              <th>Municipality</th>
+              <th>Action</th> 
+            </tr>
+          </thead>
+          <tbody className="reportTableBody">
+            {barangayRepresentatives.map((representative) => (
+              <tr key={representative.id} style={{ border: '1px solid #ddd', textAlign: 'center', height: 50}}>
+                <td style={{ borderRight: '1px solid #ddd' }}>{`${representative.firstName} ${representative.lastName}`}</td>
+                <td style={{ borderRight: '1px solid #ddd'}}>
+                  {representative.contactNo}
+                </td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{representative.email}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{representative.barangay}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{representative.province}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>{representative.municipality}</td>
+                <td style={{ borderRight: '1px solid #ddd' }}>
+                  {/* <MdOutlineModeEdit
+                    style={{ fontSize: 22, cursor: 'pointer', color: 'green', marginRight: '10px' }}
+                  /> */}
+                  <MdDelete
+                      style={{ fontSize: 22, cursor: 'pointer', color: 'red' }}
+                      onClick={() => handleDeleteRepresentative(representative.id)}
+                    />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      );
     }
-  }
+  };
 
   const getDriverName = (driverID) => {
     const driver = users.find(user => user.id === driverID);
@@ -311,7 +427,7 @@ export default function UserManage() {
     try {
       const firestore = getFirestore();
       const usersCollection = collection(firestore, 'users');
-  
+    
       if (isPendingUsers) {
         const q = query(collection(firestore, 'pendingUsers'), where('lguCode', '==', currentUserLguCode));
         const usersSnapshot = await getDocs(q);
@@ -319,15 +435,40 @@ export default function UserManage() {
         setUsers(pendingUsers);
         return;
       }
+    
+      // Query for 'Garbage Collector' account type
+      const garbageCollectorQuery = query(usersCollection, 
+        where('accountType', '==', 'Garbage Collector'), 
+        where('municipality', '==', currentUserMunicipality), 
+        where('lguCode', '==', currentUserLguCode)
+      );
   
-      const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'), where('municipality', '==', currentUserMunicipality), where('lguCode', '==', currentUserLguCode));
-      const usersSnapshot = await getDocs(q);
-      const filteredUsers = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      // Query for 'Barangay' account type
+      const barangayQuery = query(usersCollection, 
+        where('accountType', '==', 'Barangay Representative'), 
+        where('municipality', '==', currentUserMunicipality), 
+        where('lguCode', '==', currentUserLguCode)
+      );
+  
+      // Fetch the documents for both queries
+      const [garbageCollectorSnapshot, barangaySnapshot] = await Promise.all([
+        getDocs(garbageCollectorQuery),
+        getDocs(barangayQuery)
+      ]);
+  
+      // Combine the results from both queries
+      const garbageCollectors = garbageCollectorSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const barangays = barangaySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  
+      const filteredUsers = [...garbageCollectors, ...barangays];
+  
       setUsers(filteredUsers);
     } catch (error) {
       console.error(`Error fetching ${isPendingUsers ? 'pendingUsers' : 'users'}:`, error);
     }
   };
+  
+  fetchUsers();
   
   useEffect(() => {
     console.log(`Fetching ${isPendingUsers ? 'pendingUsers' : 'users'}...`);
@@ -418,6 +559,10 @@ export default function UserManage() {
   const handleAddCollectorClick =() =>{
     setAddCollectorOpen(!isAddCollectorOpen);
   }
+  const handleAddBrgyClick =() =>{
+    setAddBrgyOpen(!isAddBrgyOpen);
+  }
+  
   
   function UserListContent() {
     if (!isUsersListOpen) {
@@ -494,13 +639,14 @@ export default function UserManage() {
               <div className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
                 onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
                 }}> Trucks</div>
-                 <div  style={{ marginLeft: 80}}className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
-                onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
+                 <div  style={{ marginLeft: 80}}className={selectedSection === "Barangay" ? "click-trucks active" : "click-trucks"}
+                onClick={() => {handleSectionSelect("Barangay");  toggleUserListVisibility();
                 }}> Barangay</div>
             </>
           )}
           <button className="add-col-button" onClick={handleAddCollectorClick}>Add Collector +</button>
-         <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
+          <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
+          <button className="add-brgy-button" onClick={handleAddBrgyClick}>Add Barangay +</button>
 
           {isAddTruckOpen && (
               <div className="modal-overlay"> 
@@ -515,6 +661,11 @@ export default function UserManage() {
             {isEditTruckOpen && (
             <div className="modal-overlay"> 
               <EditTruckModal isOpen={isEditTruckOpen} handleClose={() => setIsEditTruckOpen(false)} selectedTruck={selectedTruck} />
+            </div>
+          )}
+          {isAddBrgyOpen && (
+            <div className="modal-overlay"> 
+              <AddBarangayModal isOpen={isAddBrgyOpen}  handleClose={handleCloseModal} />
             </div>
           )}
           

@@ -165,7 +165,7 @@ button.editB {
 .pending-users-button {
   position: absolute;
   top: 130px;
-  left: 1040px;
+  left: 900px;
   background-color: green;
   color: white;
   font-weight: 600;
@@ -175,10 +175,10 @@ button.editB {
   cursor: pointer;
 }
 
-.add-users-button {
+.add-users-button {        
   position: absolute;
   top: 130px;
-  left: 1180px;
+  left: 1040px;
   background-color: #F2BE2D;
   color: white;
   font-weight: 600;
@@ -190,8 +190,21 @@ button.editB {
 .add-col-button {
   position: absolute;
   top: 130px;
-  left: 1300px;
+  left: 1160px;
   background-color: darkorange;
+  color: white;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.add-brgy-button {
+  position: absolute;
+  top: 130px;
+  left: 1300px;
+  background-color: rgb(74, 136, 222);
   color: white;
   font-weight: 600;
   padding: 8px 18px;

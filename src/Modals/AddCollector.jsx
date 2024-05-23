@@ -79,15 +79,20 @@ export default function AddCollectorModal({ isOpen, handleClose }) {
   }, [municipality]);
 
   const generatePassword = () => {
-    // Generate a random password of length 8
+    // Prefix to start the password with
+    const prefix = 'pass-';
+    // Length of the random part of the password
+    const randomPartLength = 8 - prefix.length;
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let password = '';
-    for (let i = 0; i < 8; i++) {
+    let password = prefix;
+    for (let i = 0; i < randomPartLength; i++) {
       password += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return password;
   };
-
+  
+  console.log(generatePassword());
+  
   const handleSaveCollector = async () => {
     if (!firstName || !lastName || !username || !email || !province || !municipality || !barangay || !contactNo) {
       alert('Please fill in all required fields.');

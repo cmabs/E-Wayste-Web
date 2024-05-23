@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import moment from 'moment';
 
 export default function AddBarangayModal({ isOpen, handleClose }) {
@@ -79,66 +79,73 @@ export default function AddBarangayModal({ isOpen, handleClose }) {
   }, [municipality]);
 
   const generatePassword = () => {
-    // Generate a random password of length 8
+    const prefix = 'pass-';
+    const randomPartLength = 8 - prefix.length;
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let password = '';
-    for (let i = 0; i < 8; i++) {
+    let password = prefix;
+    for (let i = 0; i < randomPartLength; i++) {
       password += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return password;
   };
+  
+  console.log(generatePassword());
+  
 
-  const handleSaveCollector = async () => {
+  const handleSaveBarangay = async () => {
     if (!firstName || !lastName || !username || !email || !province || !municipality || !barangay || !contactNo) {
-      alert('Please fill in all required fields.');
-      return;
+        alert('Please fill in all required fields.');
+        return;
     }
-  
+
     try {
-      const generatedPassword = generatePassword();
-      setPassword(generatedPassword);
-  
-      await createUserWithEmailAndPassword(auth, email, generatedPassword);
-  
-      const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD HH:mm:ss');
-  
-      const newCollector = {
-        accountType: "Garbage Collector",
-        associatedImage, 
-        barangay: barangaysData.find(b => b.code === barangay)?.name || "", // Get the name corresponding to the selected barangay code
-        contactNo,
-        dateMade: fullDateTime,
-        email,
-        firstName,
-        lastName,
-        lguCode: currentUserLguCode,
-        municipality: municipalitiesData.find(m => m.code === municipality)?.name || "", // Get the name corresponding to the selected municipality code
-        password: generatedPassword,
-        province: provincesData.find(p => p.code === province)?.name || "", // Get the name corresponding to the selected province code
-        username
-      };
-  
-      await addDoc(usersCollection, newCollector);
-  
-      console.log('Collector saved successfully!');
-      alert('Collector saved successfully!');
-  
-      setFirstName(""); 
-      setLastName(""); 
-      setUsername(""); 
-      setEmail(""); 
-      setPassword(""); 
-      setProvince("");
-      setMunicipality("");
-      setBarangay("");
-      setContactNo("");
-  
+        // Generate a password for the new user
+        const generatedPassword = generatePassword();
+        setPassword(generatedPassword);
+
+        // Create a new user with the generated password
+        await createUserWithEmailAndPassword(auth, email, generatedPassword);
+
+        const fullDateTime = moment().utcOffset('+08:00').format('YYYY/MM/DD HH:mm:ss');
+
+        const newBarangay = {
+            accountType: "Barangay Representative",
+            associatedImage,
+            barangay: barangaysData.find(b => b.code === barangay)?.name || "",
+            contactNo,
+            dateMade: fullDateTime,
+            email,
+            firstName,
+            lastName,
+            lguCode: currentUserLguCode,
+            municipality: municipalitiesData.find(m => m.code === municipality)?.name || "",
+            password: generatedPassword,
+            province: provincesData.find(p => p.code === province)?.name || "",
+            username
+        };
+
+        // Save the new Barangay user to Firestore
+        await addDoc(usersCollection, newBarangay);
+
+        console.log('Barangay saved successfully!');
+        alert('Barangay saved successfully!');
+
+        // Reset form fields
+        setFirstName("");
+        setLastName("");
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setProvince("");
+        setMunicipality("");
+        setBarangay("");
+        setContactNo("");
+
     } catch (error) {
-      console.error('Error saving collector:', error);
-      alert('Error saving collector:', error)
-    }   
-  };
-  
+        console.error('Error saving Barangay:', error);
+        alert('Error saving Barangay:', error.message);
+    }
+};
 
 const handleProvinceChange = (e) => {
   setProvince(e.target.value);
@@ -162,7 +169,7 @@ return (
     <div className="add-colUsers" style={{ padding: '10px' }}>
       <div>
         <p style={{ marginLeft: 20, fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 30, fontWeight: 800, marginBottom: 10, width: 650 }}>
-          Add Collector
+          Add Barangay
         </p>
       </div>
       <div className="input-container" style={{ display: 'flex', flexDirection: 'column', marginTop: 8, alignItems: 'flex-start' }}>
@@ -220,9 +227,8 @@ return (
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: -4 }}>
         <button className="cancel"  onClick={handleClose}>Cancel</button>
-        <button className="submit" onClick={handleSaveCollector}>Save</button>
+        <button className="submit" onClick={handleSaveBarangay}>Save</button>
       </div>
     </div>
   );
 }
-

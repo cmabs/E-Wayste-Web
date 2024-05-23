@@ -1,25 +1,22 @@
-import { React, useState, useEffect , useCallback} from "react";
+import { React, useState, useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
-import '../styleSheet/mapTabStyle.css'
+import '../styleSheet/mapTabStyle.css';
 import { FaSearch, FaBell } from 'react-icons/fa';
 import { GiMineTruck } from 'react-icons/gi';
 import { BsFillPersonFill, BsGeoAlt } from 'react-icons/bs';
-import { useJsApiLoader, GoogleMap, Marker ,  InfoWindow} from '@react-google-maps/api';
-import { auth, db , storage, firebase} from '../firebase-config';
-import { collection, getDocs, where, query, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { AdvancedMarkerElement } from 'google-maps'; // Updated import statement
-import googleMaps from 'google-maps';
+import { useJsApiLoader, GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import { auth, db, storage } from '../firebase-config';
+import { collection, getDocs, where, query, doc, getDoc, updateDoc,  onSnapshot } from 'firebase/firestore';
+import { getDownloadURL, ref } from 'firebase/storage';
 
 const containerStyle = {
     width: '700px',
     height: '500px',
-   
 };
 
 const center = {
     lat: 10.3157,
-    lng: 123.8854
+    lng: 123.8854,
 };
 
 async function fetchReportsByStatusAndMunicipality(status, userMunicipality) {
@@ -47,22 +44,9 @@ async function updateReportStatus(reportId, newStatus) {
     await updateDoc(reportRef, { status: newStatus });
 }
 
-async function fetchTruckDetails(lguCode) {
-    const q = query(collection(db, 'trucks'), where('lguCode', '==', lguCode)); // Assuming 'lguCode' is the field name in the 'trucks' collection
-    const querySnapshot = await getDocs(q);
-    const truckDetails = [];
-    querySnapshot.forEach((doc) => {
-        const truckData = doc.data();
-        truckDetails.push({
-            plateNo: truckData.plateNo,
-            driverID: truckData.driverID
-        });
-    });
-    return truckDetails;
-}
 
 async function fetchDriverName(driverID) {
-    const userRef = doc(db, 'users', driverID); 
+    const userRef = doc(db, 'users', driverID);
     const userDoc = await getDoc(userRef);
     if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -76,11 +60,10 @@ async function fetchDriverName(driverID) {
 async function fetchUsername(userId) {
     try {
         const userRef = doc(db, 'users', userId);
-
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            const username = userData.username; 
+            const username = userData.username;
             return username;
         } else {
             console.log(`No user found with ID: ${userId}`);
@@ -110,6 +93,7 @@ async function fetchUncollectedReports() {
     });
     return uncollectedReports;
 }
+
 async function fetchAndLogUncollectedReports() {
     try {
         const uncollectedReportsData = await fetchUncollectedReports();
@@ -121,27 +105,43 @@ async function fetchAndLogUncollectedReports() {
 
 fetchAndLogUncollectedReports();
 
-
 export default function Map() {
-
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: "AIzaSyCCKJQavilVTZguPP8Bxy0GCPVasd3Ravg" 
+        googleMapsApiKey: "AIzaSyCCKJQavilVTZguPP8Bxy0GCPVasd3Ravg"
     });
 
     const [map, setMap] = useState(null);
     const [markers, setMarkers] = useState([]);
-    const [uncollectedReports, setUncollectedReports] = useState([]); 
+    const [uncollectedReports, setUncollectedReports] = useState([]);
     const [selectedMarker, setSelectedMarker] = useState(null);
     const [imageURL, setImageURL] = useState(null);
-    const [truckList, setTruckList] = useState([]); 
+    const [truckList, setTruckList] = useState([]);
     const [reports, setReports] = useState([]);
     const [filter, setFilter] = useState('uncollected');
-    const [searchText, setSearchText] = useState(''); // State for search text
+    const [searchText, setSearchText] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [username, setUsername] = useState(null);
     const [userMunicipality, setUserMunicipality] = useState(null);
-    const [lguCode, setLguCode] = useState(null); // State for LGU code
+    const [lguCode, setLguCode] = useState(null);
+    const [truckStatus, setTruckStatus] = useState({});
+
+    useEffect(() => {
+        async function fetchTruckStatus() {
+            const status = {};
+            try {
+                const truckListData = await fetchTruckDetails(lguCode);
+                for (const truck of truckListData) {
+                    const isActive = await isTruckActive(truck.truckId);
+                    status[truck.truckId] = isActive;
+                }
+                setTruckStatus(status);
+            } catch (error) {
+                console.error('Error fetching truck status:', error);
+            }
+        }
+        fetchTruckStatus();
+    }, [lguCode]);
 
     useEffect(() => {
         const fetchUserMunicipality = async () => {
@@ -154,9 +154,9 @@ export default function Map() {
                         const userDocSnapshot = querySnapshot.docs[0];
                         const userData = userDocSnapshot.data();
                         const userMunicipality = userData.municipality;
-                        const userLguCode = userData.lguCode; // Assuming LGU code field exists
+                        const userLguCode = userData.lguCode;
                         setUserMunicipality(userMunicipality);
-                        setLguCode(userLguCode); // Set the LGU code state
+                        setLguCode(userLguCode);
                         console.log(userLguCode);
                     } else {
                         console.log('User document not found');
@@ -168,7 +168,7 @@ export default function Map() {
                 console.error('Error fetching user municipality:', error);
             }
         };
-        fetchUserMunicipality(); // Call the function to fetch user municipality when component mounts
+        fetchUserMunicipality();
     }, []);
 
     useEffect(() => {
@@ -181,14 +181,14 @@ export default function Map() {
             }
         }
         fetchData();
-    }, [userMunicipality]); 
-    
+    }, [userMunicipality]);
+
     useEffect(() => {
         async function fetchUsernameForSelectedMarker() {
             try {
                 if (selectedMarker && selectedMarker.userId) {
                     const fetchedUsername = await fetchUsername(selectedMarker.userId);
-                    setUsername(fetchedUsername); 
+                    setUsername(fetchedUsername);
                 }
             } catch (error) {
                 console.error('Error fetching username:', error);
@@ -196,15 +196,13 @@ export default function Map() {
         }
 
         fetchUsernameForSelectedMarker();
-    }, [selectedMarker]); 
+    }, [selectedMarker]);
 
     const handleCollectButtonClick = async () => {
         if (selectedMarker) {
             try {
-                // Update the status of the report to "collected" in the database
                 await updateReportStatus(selectedMarker.id, 'collected');
-                // After updating, refetch the reports to reflect the changes
-                const reportsData = await fetchReportsByStatusAndMunicipality(filter);
+                const reportsData = await fetchReportsByStatusAndMunicipality(filter, userMunicipality);
                 setReports(reportsData);
             } catch (error) {
                 console.error('Error updating report status:', error);
@@ -214,20 +212,19 @@ export default function Map() {
 
     const handleSearch = async () => {
         try {
-            const trucksArray = await fetchTruckDetails(); // Assuming fetchTruckDetails function exists
-            const driverIDs = trucksArray.map(truck => truck.driverID); // Extract driver IDs
+            const trucksArray = await fetchTruckDetails(lguCode);
+            const driverIDs = trucksArray.map(truck => truck.driverID);
             const driverNames = await Promise.all(driverIDs.map(async (driverID) => {
-                const driverName = await fetchDriverName(driverID); // Fetch driver name for each driver ID
+                const driverName = await fetchDriverName(driverID);
                 return { driverID, driverName };
             }));
-            // Filter driver names based on search text
             const filteredResults = driverNames.filter(driver => driver.driverName.toLowerCase().includes(searchText.toLowerCase()));
             setSearchResults(filteredResults);
         } catch (error) {
             console.error('Error searching:', error);
         }
     };
-    
+
     useEffect(() => {
         async function fetchData() {
             try {
@@ -243,7 +240,7 @@ export default function Map() {
     useEffect(() => {
         async function fetchTruckList() {
             try {
-                const truckListData = await fetchTruckDetails(lguCode); // Pass the LGU code
+                const truckListData = await fetchTruckDetails(lguCode);
                 const truckListWithDriverNames = await Promise.all(truckListData.map(async (truck) => {
                     const driverName = await fetchDriverName(truck.driverID);
                     return { ...truck, driverName };
@@ -255,18 +252,18 @@ export default function Map() {
         }
         fetchTruckList();
     }, [lguCode]);
-      
+
     useEffect(() => {
         async function fetchData() {
             try {
-                const reportsData = await fetchReportsByStatusAndMunicipality(filter);
+                const reportsData = await fetchReportsByStatusAndMunicipality(filter, userMunicipality);
                 setReports(reportsData);
             } catch (error) {
                 console.error(`Error fetching ${filter} reports:`, error);
             }
         }
         fetchData();
-    }, [filter]);
+    }, [filter, userMunicipality]);
 
     const handleMarkerClick = useCallback((marker) => {
         setSelectedMarker(marker);
@@ -281,8 +278,8 @@ export default function Map() {
             console.error(`Error fetching ${status} reports:`, error);
         }
     }, [userMunicipality]);
-    
-      useEffect(() => {
+
+    useEffect(() => {
         const fetchImageURL = async () => {
             if (selectedMarker) {
                 try {
@@ -296,20 +293,6 @@ export default function Map() {
         fetchImageURL();
     }, [selectedMarker]);
 
-      useEffect(() => {
-        const fetchImageURL = async () => {
-            if (selectedMarker) {
-                try {
-                    const url = await getDownloadURL(ref(storage, `postImages/${selectedMarker.associatedImage}`));
-                    setImageURL(url);
-                } catch (error) {
-                    console.error('Error fetching image URL:', error);
-                }
-            }
-        };
-        fetchImageURL();
-    }, [selectedMarker]);
-      
     const handleInfoClose = () => {
         setSelectedMarker(null);
     };
@@ -324,83 +307,110 @@ export default function Map() {
         setMap(null);
     }, []);
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const uncollectedReportsData = await fetchUncollectedReports();
-                setUncollectedReports(uncollectedReportsData);
-            } catch (error) {
-                console.error('Error fetching uncollected reports:', error);
-            }
+    // Fetch truck details
+    async function fetchTruckDetails(lguCode) {
+        const q = query(collection(db, 'trucks'), where('lguCode', '==', lguCode));
+        const querySnapshot = await getDocs(q);
+        const truckDetails = [];
+        
+        for (const doc of querySnapshot.docs) {
+            const truckData = doc.data();
+            const truckId = doc.id;
+            const isActive = await isTruckActive(truckId);
+            const latitude = truckData.latitude; // Assuming latitude is stored in the 'trucks' collection
+            const longitude = truckData.longitude; // Assuming longitude is stored in the 'trucks' collection
+            
+            truckDetails.push({
+                truckId: truckId,
+                plateNo: truckData.plateNo,
+                driverID: truckData.driverID,
+                condition: truckData.condition,
+                isActive: isActive,
+                latitude: latitude,
+                longitude: longitude
+            });
         }
-        fetchData();
-    }, []);
+        
+        return truckDetails;
+    }
+    
+    
+    async function isTruckActive(truckId) {
+        const q = query(collection(db, 'collectorLocationTrack'), where('truckId', '==', truckId));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    }
+    
 
     function CollectionListContent() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {truckList.map((truck, index) => (
                     <div className="collectionB" key={index}>
-                          {(truck.driverName.toLowerCase().includes(searchText.toLowerCase()) || truck.plateNo.toLowerCase().includes(searchText.toLowerCase())) && (
-                        <button>
-                            <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-                                <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start' }}>
-                                    <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Plate Number</p>
-                                    <p style={{ padding: 0, margin: 0, fontSize: 22, fontWeight: 800 }}>{truck.plateNo}</p>
+                        {(truck.driverName.toLowerCase().includes(searchText.toLowerCase()) || truck.plateNo.toLowerCase().includes(searchText.toLowerCase())) && (
+                            <button>
+                                <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                                    <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start' }}>
+                                        <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Plate Number</p>
+                                        <p style={{ padding: 0, margin: 0, fontSize: 22, fontWeight: 800 }}>{truck.plateNo}</p>
+                                    </div>
+                                    <div style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                        <GiMineTruck style={{ fontSize: 60, color: 'rgb(110,170,46)' }} />
+                                    </div>
                                 </div>
-                                <div style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                    <GiMineTruck style={{ fontSize: 60, color: 'rgb(110,170,46)' }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-start', textAlign: 'left', paddingTop: 45, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(13,86,1)' }}>
+                                    <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Location</p>
+                                    <p style={{ padding: 0, margin: 0, marginBottom: 15, fontSize: '1.3em', fontWeight: 800, color: 'rgb(13,86,1)' }}>{truck.location}</p>
                                 </div>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-start', textAlign: 'left', paddingTop: 45, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(13,86,1)' }}>
-                                <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Location</p>
-                                <p style={{ padding: 0, margin: 0, marginBottom: 15, fontSize: '1.3em', fontWeight: 800, color: 'rgb(13,86,1)' }}>{truck.location}</p>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', textAlign: 'left', paddingTop: 8 }}>
-                                <div style={{ display: 'flex', height: 40, width: 40, backgroundColor: 'rgb(249, 227, 181)', borderRadius: 100, borderStyle: 'solid', borderWidth: 1, borderColor: 'rgb(226,160,43)', justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
-                                    <BsFillPersonFill style={{ fontSize: 30, color: 'rgb(226,160,43)' }} />
+                                <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', textAlign: 'left', paddingTop: 8 }}>
+                                    <div style={{ display: 'flex', height: 40, width: 40, backgroundColor: 'rgb(249, 227, 181)', borderRadius: 100, borderStyle: 'solid', borderWidth: 1, borderColor: 'rgb(226,160,43)', justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
+                                        <BsFillPersonFill style={{ fontSize: 30, color: 'rgb(226,160,43)' }} />
+                                    </div>
+                                    <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start', marginLeft: 10 }}>
+                                        <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800 }}>{truck.driverName}</p>
+                                        <p style={{ padding: 0, margin: 0, fontWeight: 600, color: 'rgb(120,120,120)' }}>Driver</p>
+                                    </div>
                                 </div>
-                                <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start', marginLeft: 10 }}>
-                                    <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800 }}>{truck.driverName}</p>
-                                    <p style={{ padding: 0, margin: 0, fontWeight: 600, color: 'rgb(120,120,120)' }}>location</p>
-
+                                <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', textAlign: 'left', paddingTop: 8 }}>
+                                <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800, color: truckStatus[truck.truckId] ? 'green' : 'red' }}>
+                                   {truckStatus[truck.truckId] ? 'ACTIVE' : 'INACTIVE'}
+                               </p>
                                 </div>
-                            </div>
-                        </button>
-                            )}
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
         );
     }
     
-
     return (
         <>
             <div style={{ marginLeft: 40, marginTop: 40, width: 1030 }}>
-            <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0, alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0, alignItems: 'center' }}>
                     <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>Map</h1>
-                    <div className="map-filter-buttons" style={{ marginLeft: -330}}> 
+                    <div className="map-filter-buttons" style={{ marginLeft: -330 }}>
                         <button className={filter === 'uncollected' ? 'uncollected' : 'collected'} onClick={() => handleFilterButtonClick('uncollected')}>Uncollected</button>
                         <button className={filter === 'collected' ? 'uncollected' : 'collected'} onClick={() => handleFilterButtonClick('collected')}>Collected</button>
                     </div>
-                        
                 </div>
                 <div style={{ marginTop: 20, display: 'flex', flexDirection: 'row', gap: 20, width: 1020 }}>
-                <div className="mapList">
-                        <div style={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'flex-end'}}>
-                        <input type="text" placeholder="Search name/ Plate No." className="searchBar2" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
-                        <button className="searchButton" onClick={handleSearch}><FaSearch style={{ fontSize: 20 }} /></button>
+                    <div className="mapList">
+                        <div style={{ display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'flex-end' }}>
+                            <input type="text" placeholder="Search name/ Plate No." className="searchBar2" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                            <button className="searchButton" onClick={handleSearch}><FaSearch style={{ fontSize: 20 }} /></button>
                         </div>
-                          <p style={{fontFamily: 'Inter', fontWeight: 600, color: 'rgb(69,168,53)', paddingBottom: 0, marginBottom: 10}}></p>
-                        {CollectionListContent(searchText)}
-                    </div >
+                        <p style={{ fontFamily: 'Inter', fontWeight: 600, color: 'rgb(69,168,53)', paddingBottom: 0, marginBottom: 10 }}></p>
+                        {CollectionListContent()}
+                    </div>
                     <div className="mapPage">
                         {isLoaded ? (
                             <GoogleMap
                                 mapContainerStyle={containerStyle}
                                 center={center}
                                 zoom={10}
+                                onLoad={onLoad}
+                                onUnmount={onUnmount}
                             >
                                 {reports.map((report, index) => (
                                     <Marker
@@ -420,32 +430,31 @@ export default function Map() {
                                         }}
                                         onCloseClick={handleInfoClose}
                                     >
-                                    <div style={{ width: '300px', display: 'flex', flexDirection: 'row' }}>
+                                        <div style={{ width: '300px', display: 'flex', flexDirection: 'row' }}>
                                             <img
                                                 src={`https://firebasestorage.googleapis.com/v0/b/e-wayste.appspot.com/o/postImages%2F${selectedMarker.associatedImage}?alt=media`}
                                                 alt="Report Image"
-                                                style={{ backgroundColor: '#E5F7E7', padding: 7,borderRadius:10, width: '230px', height: '100px', marginRight: '10px' }}
+                                                style={{ backgroundColor: '#E5F7E7', padding: 7, borderRadius: 10, width: '230px', height: '100px', marginRight: '10px' }}
                                             />
                                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                            <div style={{color:'green', fontSize: 20, fontWeight:'bold', marginTop: 0}}> {username && <div>{username}</div>}</div>
-                                            <div  style={{ marginBottom: 10}}>{selectedMarker.dateTime}</div>
-                                            <div>
-                                            <BsGeoAlt style={{ color: 'red', marginRight: '5px' }} />
-                                                {selectedMarker.location}
+                                                <div style={{ color: 'green', fontSize: 20, fontWeight: 'bold', marginTop: 0 }}>{username && <div>{username}</div>}</div>
+                                                <div style={{ marginBottom: 10 }}>{selectedMarker.dateTime}</div>
+                                                <div>
+                                                    <BsGeoAlt style={{ color: 'red', marginRight: '5px' }} />
+                                                    {selectedMarker.location}
+                                                </div>
+                                                {filter !== 'collected' && (
+                                                    <button
+                                                        className="collectButton"
+                                                        onClick={handleCollectButtonClick}
+                                                    >
+                                                        Collect
+                                                    </button>
+                                                )}
                                             </div>
-                                            {filter !== 'collected' && (
-                                                <button
-                                                    className="collectButton"
-                                                    onClick={handleCollectButtonClick}
-                                                >
-                                                    Collect
-                                                </button>
-                                            )}
                                         </div>
-                                    </div>
                                     </InfoWindow>
                                 )}
-                                
                             </GoogleMap>
                         ) : (
                             <div>Loading...</div>
