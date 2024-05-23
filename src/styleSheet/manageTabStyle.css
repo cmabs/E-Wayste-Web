@@ -165,6 +165,19 @@ button.editB {
 .pending-users-button {
   position: absolute;
   top: 130px;
+  left: 1038px;
+  background-color: green;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.add-col-button {
+  position: absolute;
+  top: 130px;
   left: 1180px;
   background-color: green;
   color: white;
@@ -188,10 +201,32 @@ button.editB {
   cursor: pointer;
 }
 
-.pending-users-button:hover {
-  background-color: darkgreen;
+.add-users-button:hover {
+  background-color: rgb(237, 199, 58);
   transition: background-color 0.3s ease-in-out;
   transform: scale(1.05);
+}
+
+.add-col-button:hover {
+  background-color: rgb(21, 79, 24);
+  transition: background-color 0.3s ease-in-out;
+  transform: scale(1.05);
+}
+
+.add-collector-btn {
+  background-color: orange;
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: 300px;
+  margin-top: -15px;
+  border-radius: 5px;
+  padding: 7px 15px;
+  cursor: pointer;
+}
+
+.add-collector-btn:hover {
+  background-color: darkorange;
 }
 
 .click-collector {
@@ -312,30 +347,48 @@ button.submit {
   color: #fff;
 }
 
-.add-collector-btn {
-  background-color: orange;
-  color: white;
-  border: none;
+.add-col-button:hover {
+  background-color: rgb(20, 94, 4);
+}
+
+.add-colUsers {
+  position: absolute;
+  width: 600px;
+  height: 100%;
+  background: #F4FDF0;
+  border-radius: 20px;
+}
+
+.input-addCol {
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
-  font-weight: 300px;
-  margin-top: -15px;
-  border-radius: 5px;
-  padding: 7px 15px;
-  cursor: pointer;
+  padding: 7px; /* Adjust padding as needed */
+  border: 1px solid #ccc; /* Set the desired border color */
+  border-radius: 4px; /* Adjust border-radius as needed */
+  margin-bottom: 15px; /* Adjust as needed */
+  margin-left: 20px;
+  width: 535px;
 }
 
-.add-collector-btn:hover {
-  background-color: darkorange;
+.input-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  align-items: flex-start;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+.input-groupCollector {
+  display: flex;
+  flex-direction: column;
+
 }
 
-.delete-col-btn {
-  background-color: green;
-  color: white;
-  border: none;
-  border-radius: 2px;
-  padding: 5px;
-  margin-left: 5px;
-  cursor: pointer;
-}
 
-  
+
+
+
+
+

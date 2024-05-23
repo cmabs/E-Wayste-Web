@@ -6,6 +6,7 @@ import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, quer
 import { getStorage, ref, getDownloadURL, listAll } from 'firebase/storage';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AddTruckModal from "../Modals/AddTruck";
+import AddCollectorModal from "../Modals/AddCollector";
 import EditTruckModal from '../Modals/EditTruck';
 
 import { MdOutlineModeEdit, MdDelete } from 'react-icons/md';
@@ -31,6 +32,7 @@ export default function UserManage() {
   const [isEditTruckOpen, setIsEditTruckOpen] = useState(false);
   const [selectedTruck, setSelectedTruck] = useState(null);
   const [isAddTruckOpen, setAddTruckOpen] =useState(false);
+  const [isAddCollectorModalOpen, setAddCollectorModalOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("collector");  
   const [isCollectorOpen, setIsCollectorOpen] = useState(true); 
   const [isUsersListOpen, setIsUsersListOpen]  =useState(true);
@@ -358,20 +360,34 @@ export default function UserManage() {
     event.preventDefault();
     try {
       const firestore = getFirestore();
-      
+      const auth = getAuth();
+  
+      // Reference to the pending user document
       const pendingUserRef = doc(firestore, 'pendingUsers', userId);
       const pendingUserSnapshot = await getDoc(pendingUserRef);
-      
+  
       if (pendingUserSnapshot.exists()) {
         const userData = pendingUserSnapshot.data();
-        
+  
+        // Create user in Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+        const authUser = userCredential.user;
+  
+        // Add additional user data to the Firestore 'users' collection
         const usersCollection = collection(firestore, 'users');
-        await addDoc(usersCollection, userData);
-        
+        await addDoc(usersCollection, {
+          uid: authUser.uid,
+          email: userData.email,
+          // Add any additional fields from userData as needed
+          ...userData,
+        });
+  
+        // Delete the user from the 'pendingUsers' collection
         await deleteDoc(pendingUserRef);
+  
+        console.log('User approved and saved in Firebase Authentication and Firestore successfully!');
         
-        console.log('User approved successfully!');
-      
+        // Call the function to refresh users list
         fetchUsers();
       } else {
         console.error('User not found in pendingUsers collection.');
@@ -381,7 +397,7 @@ export default function UserManage() {
     }
   };
   
-  
+
   
   const handleRejectUser = async (event, userId) => {
     event.preventDefault();
@@ -401,6 +417,10 @@ export default function UserManage() {
   const handleAddTruckClick =() =>{
     setAddTruckOpen(!isAddTruckOpen);
   }
+
+  const handleAddCollectorClick = () => {
+    setAddCollectorModalOpen(true);
+  };
   
   function UserListContent() {
     if (!isUsersListOpen) {
@@ -465,60 +485,69 @@ export default function UserManage() {
   return (
     <>
       <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
-        
-        <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-          <button className="pending-users-button" onClick={handlePendingUsersClick}>Pending Users</button>
-          {!isPendingUsers && (
-            <>
-              <div
-                className={selectedSection === "collector" ? "click-collector active" : "click-collector"}
-                onClick={() => { handleSectionSelect("collector"); toggleUserListVisibility(); setIsCollectorOpen(true);
-                }}>Collector</div>
-              <div className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
-                onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
-                }}> Trucks</div>
-            </>
-          )}
-        <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
-          {isAddTruckOpen && (
-              <div className="modal-overlay"> 
-                  <AddTruckModal isOpen={isAddTruckOpen} handleClose={handleCloseModal} />
-              </div>
-            )}
-            {isEditTruckOpen && (
-            <div className="modal-overlay"> 
-              <EditTruckModal isOpen={isEditTruckOpen} handleClose={() => setIsEditTruckOpen(false)} selectedTruck={selectedTruck} />
-            </div>
-          )}
-          
-          <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
-            {isPendingUsers ? 'Pending Users' : 'User Management'}
-          </h1>
-          </div>
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', marginLeft: 40, marginTop: -45, gap: 20,  width: 1090 }}>
-            <div style={{ display: 'flex', flexDirection: 'row' }}>
-            <input
-                  type="text"
-                  placeholder="Search name"
-                  className="searchBar"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                  <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
-                  <FaSearch style={{ fontSize: 20 }} />
-              </button>
-            </div>
-            <button className="notifIcon">
-              <FaBell />
-            </button>
-          </div>
-        <div style={{  marginTop: 70, marginBottom: 40, padding: 10, borderRadius: 20, width: 1100 }}>  
-        {renderTableContent()}
-        <div style={{ display: isUserListVisible ? 'block' : 'none' }}>
-        <UserListContent />
-      </div>
+  <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
+    {!isPendingUsers && (
+      <>
+        <div
+          className={selectedSection === "collector" ? "click-collector active" : "click-collector"}
+          onClick={() => { handleSectionSelect("collector"); toggleUserListVisibility(); setIsCollectorOpen(true); }}
+        >
+          Collector
         </div>
+        <div
+          className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
+          onClick={() => { handleSectionSelect("trucks"); toggleUserListVisibility(); }}
+        >
+          Trucks
+        </div>
+      </>
+    )}
+    <button className="add-col-button" onClick={handleAddCollectorClick}>Add Collector +</button>
+    {isAddCollectorModalOpen && (
+      <div className="modal-overlay"> 
+        <AddCollectorModal isOpen={isAddCollectorModalOpen} handleClose={() => setAddCollectorModalOpen(false)} />
       </div>
+    )}
+    <button className="add-users-button" onClick={handleAddTruckClick}>Add Truck +</button>
+    {isAddTruckOpen && (
+      <div className="modal-overlay"> 
+        <AddTruckModal isOpen={isAddTruckOpen} handleClose={handleCloseModal} />
+      </div>
+    )}
+    {isEditTruckOpen && (
+      <div className="modal-overlay"> 
+        <EditTruckModal isOpen={isEditTruckOpen} handleClose={() => setIsEditTruckOpen(false)} selectedTruck={selectedTruck} />
+      </div>
+    )}
+    <h1 style={{ fontFamily: 'Inter', color: 'rgb(13, 86, 1)', fontSize: 40, fontWeight: 800, marginBottom: 0, width: 650 }}>
+      {isPendingUsers ? 'Pending Users' : 'User Management'}
+    </h1>
+  </div>
+  <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-end', marginLeft: 40, marginTop: -45, gap: 20, width: 1090 }}>
+    <div style={{ display: 'flex', flexDirection: 'row' }}>
+      <input
+        type="text"
+        placeholder="Search name"
+        className="searchBar"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
+        <FaSearch style={{ fontSize: 20 }} />
+      </button>
+    </div>
+    <button className="notifIcon">
+      <FaBell />
+    </button>
+  </div>
+  <div style={{ marginTop: 70, marginBottom: 40, padding: 10, borderRadius: 20, width: 1100 }}>  
+    {renderTableContent()}
+    <div style={{ display: isUserListVisible ? 'block' : 'none' }}>
+      <UserListContent />
+    </div>
+  </div>
+</div>
+
       {openImage ?
         <>
           {userLicense.map((url) => {
