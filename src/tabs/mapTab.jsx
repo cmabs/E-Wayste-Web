@@ -300,40 +300,45 @@ export default function Map() {
         fetchData();
     }, []);
 
-    function CollectionListContent() {
+    function CollectionListContent({ truckList, searchText }) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {truckList.map((truck, index) => (
-                    <div className="collectionB" key={index}>
-                          {(truck.driverName.toLowerCase().includes(searchText.toLowerCase()) || truck.plateNo.toLowerCase().includes(searchText.toLowerCase())) && (
-                        <button>
-                            <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-                                <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start' }}>
-                                    <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Plate Number</p>
-                                    <p style={{ padding: 0, margin: 0, fontSize: 22, fontWeight: 800 }}>{truck.plateNo}</p>
-                                </div>
-                                <div style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                    <GiMineTruck style={{ fontSize: 60, color: 'rgb(110,170,46)' }} />
-                                </div>
+                {truckList.map((truck, index) => {
+                    const driverNameMatch = truck.driverName && truck.driverName.toLowerCase().includes(searchText.toLowerCase());
+                    const plateNoMatch = truck.plateNo && truck.plateNo.toLowerCase().includes(searchText.toLowerCase());
+                    
+                    if (driverNameMatch || plateNoMatch) {
+                        return (
+                            <div className="collectionB" key={index}>
+                                <button>
+                                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                                        <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start' }}>
+                                            <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Plate Number</p>
+                                            <p style={{ padding: 0, margin: 0, fontSize: 22, fontWeight: 800 }}>{truck.plateNo || 'N/A'}</p>
+                                        </div>
+                                        <div style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                            <GiMineTruck style={{ fontSize: 60, color: 'rgb(110,170,46)' }} />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-start', textAlign: 'left', paddingTop: 45, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(13,86,1)' }}>
+                                        <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Location</p>
+                                        <p style={{ padding: 0, margin: 0, marginBottom: 15, fontSize: '1.3em', fontWeight: 800, color: 'rgb(13,86,1)' }}>{truck.location || 'N/A'}</p>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', textAlign: 'left', paddingTop: 8 }}>
+                                        <div style={{ display: 'flex', height: 40, width: 40, backgroundColor: 'rgb(249, 227, 181)', borderRadius: 100, borderStyle: 'solid', borderWidth: 1, borderColor: 'rgb(226,160,43)', justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
+                                            <BsFillPersonFill style={{ fontSize: 30, color: 'rgb(226,160,43)' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start', marginLeft: 10 }}>
+                                            <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800 }}>{truck.driverName || 'N/A'}</p>
+                                            <p style={{ padding: 0, margin: 0, fontWeight: 600, color: 'rgb(120,120,120)' }}>Driver</p>
+                                        </div>
+                                    </div>
+                                </button>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'flex-start', textAlign: 'left', paddingTop: 45, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderColor: 'rgb(13,86,1)' }}>
-                                <p style={{ padding: 0, margin: 0, marginBottom: 3, fontWeight: 600, color: 'rgb(120,120,120)' }}>Location</p>
-                                <p style={{ padding: 0, margin: 0, marginBottom: 15, fontSize: '1.3em', fontWeight: 800, color: 'rgb(13,86,1)' }}>{truck.location}</p>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', textAlign: 'left', paddingTop: 8 }}>
-                                <div style={{ display: 'flex', height: 40, width: 40, backgroundColor: 'rgb(249, 227, 181)', borderRadius: 100, borderStyle: 'solid', borderWidth: 1, borderColor: 'rgb(226,160,43)', justifyContent: 'center', alignItems: 'center', marginLeft: 10 }}>
-                                    <BsFillPersonFill style={{ fontSize: 30, color: 'rgb(226,160,43)' }} />
-                                </div>
-                                <div style={{ display: 'flex', flex: 5, flexDirection: 'column', alignItems: 'flex-start', marginLeft: 10 }}>
-                                    <p style={{ padding: 0, margin: 0, fontSize: '1.1em', fontWeight: 800 }}>{truck.driverName}</p>
-                                    <p style={{ padding: 0, margin: 0, fontWeight: 600, color: 'rgb(120,120,120)' }}>location</p>
-
-                                </div>
-                            </div>
-                        </button>
-                            )}
-                    </div>
-                ))}
+                        );
+                    }
+                    return null;
+                })}
             </div>
         );
     }

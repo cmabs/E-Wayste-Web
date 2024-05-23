@@ -82,7 +82,7 @@ export default function Dashboard() {
     fetchGeneralUsersReports();
   }, []);
 
-  function UserListContent({ users }) {
+  function UserListContent  ({ users }) {
     return (
       <ul style={{ listStyleType: 'none', padding: 0 }}>
         {users.map((user, userID) => (
@@ -177,6 +177,7 @@ export default function Dashboard() {
             </div>
           </div>
           <UserListContent users={searchTerm ? filteredUsers : users} />
+         
         </div>
       </div>
     </>

@@ -303,16 +303,19 @@ export default function Report() {
           </div>
           <div style={{ marginTop: 290, marginBottom: 40,}}>
           <div style={{ display: 'flex', flexDirection: 'row' , marginBottom :10}}>
-              <input
-                    type="text"
-                    placeholder="Search by location, or date"
-                    className="searchBar"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+             
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <input
+                  type="text"
+                  placeholder="Search name"
+                  className="searchBar"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
                   <button className="searchButton" onClick={() => { handleSearch(); setSearchTerm(''); }}>
-                    <FaSearch style={{ fontSize: 20 }} />
-                  </button>
+                  <FaSearch style={{ fontSize: 20 }} />
+              </button>
+            </div>
                   <Button style={{ backgroundColor: '#51AF5B', marginLeft: 8, color: 'white', borderRadius: 13}} onClick={handleSort}>Sort</Button>
                   <FormControl sx={{ minWidth: 150, marginLeft: 80 }}> {/* Adjust the minWidth value as needed */}
                     <Select
