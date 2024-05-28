@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { getFirestore, collection, getDocs, addDoc, query, where, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, where, addDoc} from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import moment from 'moment';
 
 export default function AddTruckModal({ isOpen, handleClose }) {
   const [truckCount, setTruckCount] = useState(0);
   const [users, setUsers] = useState([]);
+  const [trucks, setTrucks] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState('');
   const [selectedCollectors, setSelectedCollectors] = useState([]);
   const [selectedCollector, setSelectedCollector] = useState('');
   const [currentUserLguCode, setCurrentUserLguCode] = useState(""); 
-  const [currentUserLguID, setCurrentUserLguID] = useState("");// Added state for current user's lguCode
+  const [currentUserLguID, setCurrentUserLguID] = useState("");
   const [plateNo, setPlateNo] = useState("");
+  const [DriverChoice, setDriverChoice] = useState([{ key: '', value: '[Select Driver]' }]);
+  const [CollectorChoice, setCollectorChoice] = useState([{ key: '', value: '[Select Collector]' }]);
 
   useEffect(() => {
     fetchTruckCount();
     fetchGarbageCollectors();
     fetchLoggedInUserLguCode();
   }, []);
+
+  useEffect(() => {
+    generateDriverChoice();
+    generateCollectorChoice();
+  }, [users, trucks]);
 
   const fetchLoggedInUserLguCode = async () => {
     try {
@@ -35,9 +43,7 @@ export default function AddTruckModal({ isOpen, handleClose }) {
             const userID = querySnapshot.docs[0].id;
 
             setCurrentUserLguCode(userLguCode);
-            console.log('Logged-in user LGU code:', userLguCode);
             setCurrentUserLguID(userID);
-            console.log('Logged-in user ID:', userID);
           }
         }
       });
@@ -53,14 +59,12 @@ export default function AddTruckModal({ isOpen, handleClose }) {
       const q = query(trucksCollection, where('lguCode', '==', currentUserLguCode));
       const trucksSnapshot = await getDocs(q);
       const count = trucksSnapshot.docs.length;
-      console.log('Truck count for current user LGU code:', count);
       setTruckCount(count);
     } catch (error) {
       console.error('Error fetching truck count:', error);
     }
   };
   
-
   const fetchGarbageCollectors = async () => {
     try {
       const firestore = getFirestore();
@@ -68,7 +72,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
       const q = query(usersCollection, where('accountType', '==', 'Garbage Collector'));
       const usersSnapshot = await getDocs(q);
       const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log("Fetched users:", usersData); // Log fetched users
       setUsers(usersData);
     } catch (error) {
       console.error('Error fetching garbage collectors:', error);
@@ -77,7 +80,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
 
   const handleSaveTruck = async () => {
     try {
-      // Check if any required fields are missing
       if (!plateNo || !selectedDriver || selectedCollectors.length === 0) {
         alert('Please fill in all required fields.');
         return;
@@ -99,7 +101,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
         }
       };
       await addDoc(trucksCollection, truckData);
-      console.log('Truck saved successfully!');
       
       setPlateNo(""); 
       setSelectedDriver(""); 
@@ -110,18 +111,6 @@ export default function AddTruckModal({ isOpen, handleClose }) {
     }
   };
   
-
-  const handleDriverChange = (event) => {
-    const selectedDriverId = event.target.value;
-  
-    // Check if the selected driver is also selected as a collector
-    if (selectedCollectors.includes(selectedDriverId)) {
-      alert('The selected driver cannot be chosen as a collector.');
-      return;
-    }
-  
-    setSelectedDriver(selectedDriverId);
-  };
 
   const handleCreateCollectorClick = () => {
     if (selectedCollector === '') {
@@ -152,7 +141,80 @@ export default function AddTruckModal({ isOpen, handleClose }) {
       setSelectedCollector(selectedCollectorId);
     }
   };
+
+  const generateDriverChoice = () => {
+    try {
+      let ctr = 1;
+      const newDriverChoice = [{ key: '', value: '[Select Driver]' }];
+      users.forEach((user) => {
+        if (user.accountType === 'Garbage Collector' && user.lguCode === currentUserLguCode) {
+          let isAssignedDriver = false;
   
+          // Check if the user is already assigned as a driver in any truck
+          trucks.forEach((truck) => {
+            if (user.id === truck.driverID) {
+              isAssignedDriver = true;
+            }
+          });
+  
+          // If the user is not already assigned as a driver, add them to the options
+          if (!isAssignedDriver) {
+            newDriverChoice[ctr] = { key: user.id, value: `${user.firstName} ${user.lastName}` };
+            ctr++;
+          }
+        }
+      });
+      setDriverChoice(newDriverChoice);
+    } catch (e) {
+      console.error('Error generating driver choices:', e);
+    }
+  };
+  
+  const handleDriverChange = (event) => {
+    const selectedDriverId = event.target.value;
+    
+    // Check if the selected driver is already assigned to another truck
+    const isDriverAssigned = trucks.some(truck => truck.driverID === selectedDriverId);
+    
+    // If the selected driver is already assigned, show an alert and reset the selected driver
+    if (isDriverAssigned) {
+      alert('This driver is already assigned to another truck.');
+      setSelectedDriver('');
+      return;
+    }
+    
+    // Set the selected driver
+    setSelectedDriver(selectedDriverId);
+  };
+  
+  
+
+  const generateCollectorChoice = () => {
+    try {
+      let ctr = 1;
+      const newCollectorChoice = [{ key: '', value: '[Select Collector]' }];
+      users.forEach((user) => {
+        if (user.accountType === 'Garbage Collector' && user.lguCode === currentUserLguCode && user.id !== selectedDriver) {
+          let isRepeat = false;
+          let isRepeatDriver = false;
+
+          trucks.forEach((truck) => {
+            if (user.id === truck.driverID) {
+              isRepeatDriver = true;
+            }
+          });
+          if (!isRepeat && !isRepeatDriver) {
+            newCollectorChoice[ctr] = { key: user.id, value: `${user.firstName} ${user.lastName}` };
+            ctr++;
+          }
+        }
+      });
+      setCollectorChoice(newCollectorChoice);
+    } catch (e) {
+      console.error('Error generating collector choices:', e);
+    }
+  };
+
   return (
     <div className="add-sideUsers" style={{ padding: '10px' }}>
       <div>
@@ -168,12 +230,9 @@ export default function AddTruckModal({ isOpen, handleClose }) {
         <div className="input-group">
           <label className="label-addtruck" htmlFor="assignedDriver">Assigned Driver</label>
           <select className="input-addtruck" id="assignedDriver" value={selectedDriver} onChange={handleDriverChange} style={{ background: 'white', borderRadius: '5px', padding: '5px', width: '298%' }}>
-            <option value="">Select Driver</option>
-            {users
-              .filter(user => user.lguCode === currentUserLguCode)
-              .map(user => (
-                <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
-              ))}
+            {DriverChoice.map(driver => (
+              <option key={driver.key} value={driver.key}>{driver.value}</option>
+            ))}
           </select>
         </div>
 
@@ -181,14 +240,11 @@ export default function AddTruckModal({ isOpen, handleClose }) {
           <label className="label-addtruck" htmlFor="assignedCollector">Assigned Collector</label>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <select className="input-addtruck" id="assignedCollector" value={selectedCollector} onChange={handleCollectorChange} style={{ background: 'white', borderRadius: '5px', padding: '5px', width: '240%', marginRight: '5px' }}>
-              <option value="">Select Collector</option>
-              {users
-                .filter(user => user.lguCode === currentUserLguCode && user.id !== selectedDriver && !selectedCollectors.includes(user.id))
-                .map(user => (
-                  <option key={user.id} value={user.id}>{`${user.firstName} ${user.lastName}`}</option>
-                ))}
+              {CollectorChoice.map(collector => (
+                <option key={collector.key} value={collector.key}>{collector.value}</option>
+              ))}
             </select>
-            <button className="add-collector-btn" onClick={handleCreateCollectorClick} disabled={users.filter(user => user.lguCode === currentUserLguCode && user.id !== selectedDriver && !selectedCollectors.includes(user.id)).length === 0}>+</button>
+            <button className="add-collector-btn" onClick={handleCreateCollectorClick} disabled={CollectorChoice.length <= 1}>+</button>
           </div>
         </div>
 
@@ -208,3 +264,4 @@ export default function AddTruckModal({ isOpen, handleClose }) {
     </div>
   );
 }
+

@@ -179,7 +179,7 @@ button.editB {
   position: absolute;
   top: 130px;
   left: 1180px;
-  background-color: green;
+  background-color: rgb(254, 119, 9);
   color: white;
   font-weight: 600;
   padding: 10px 20px;
@@ -385,6 +385,17 @@ button.submit {
   flex-direction: column;
 
 }
+
+.delete-col-btn {
+  background-color: green;
+  color: white;
+  border: none;
+  border-radius: 2px;
+  padding: 5px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
 
 
 

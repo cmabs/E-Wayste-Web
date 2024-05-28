@@ -486,22 +486,18 @@ export default function UserManage() {
     <>
       <div style={{ marginLeft: 40, marginTop: 40, width: 902 }}>
   <div style={{ display: 'flex', flexDirection: 'row', marginBottom: 0 }}>
-    {!isPendingUsers && (
-      <>
-        <div
-          className={selectedSection === "collector" ? "click-collector active" : "click-collector"}
-          onClick={() => { handleSectionSelect("collector"); toggleUserListVisibility(); setIsCollectorOpen(true); }}
-        >
-          Collector
-        </div>
-        <div
-          className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
-          onClick={() => { handleSectionSelect("trucks"); toggleUserListVisibility(); }}
-        >
-          Trucks
-        </div>
-      </>
-    )}
+  <button className="pending-users-button" onClick={handlePendingUsersClick}>Pending Users</button>
+          {!isPendingUsers && (
+            <>
+              <div
+                className={selectedSection === "collector" ? "click-collector active" : "click-collector"}
+                onClick={() => { handleSectionSelect("collector"); toggleUserListVisibility(); setIsCollectorOpen(true);
+                }}>Collector</div>
+              <div className={selectedSection === "trucks" ? "click-trucks active" : "click-trucks"}
+                onClick={() => {handleSectionSelect("trucks");  toggleUserListVisibility();
+                }}> Trucks</div>
+            </>
+          )}
     <button className="add-col-button" onClick={handleAddCollectorClick}>Add Collector +</button>
     {isAddCollectorModalOpen && (
       <div className="modal-overlay"> 
